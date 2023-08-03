@@ -1,0 +1,54 @@
+{
+    "name": "TouchAction",
+    "maps": [
+        {
+            "name": "Touch",
+            "id": "fb81c7de-d328-4a4b-935b-e9653ce8f5cd",
+            "actions": [
+                {
+                    "name": "SingleTouch",
+                    "type": "Button",
+                    "id": "a503e43a-81ac-4654-a890-52d59f0e5f79",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Drag",
+                    "type": "Value",
+                    "id": "76d92c16-9987-47ae-81ab-6f36fcd8b18b",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "af55d220-f012-4740-9850-c0a4b0224a65",
+                    "path": "<Touchscreen>/primaryTouch/tap",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SingleTouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ae1f55fe-4eac-4d6a-9f7d-e14d66d83fc9",
+                    "path": "<Touchscreen>/primaryTouch/delta",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Drag",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

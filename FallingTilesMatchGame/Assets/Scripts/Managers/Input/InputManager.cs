@@ -1,19 +1,26 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.PlayerLoop;
+using UnityEngine.UI;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 public class InputManager : Singleton<InputManager>
 {
-	private PlayerInput _playerInput;
-
-	private InputAction _singleTouchInputAction;
-	private InputAction _dragInputAction;
+	public static event Action Rotate;
+	public static event Action<DragDirection> Move;
 	
-	private GameManager _gameManager;
-
-	private Action<DragDirection, DragState> _dragAction;
-
+	public bool PlayerInputEnabled { get; private set; }
+	
+	[SerializeField]
+	private float _moveDistanceThreshold  = 5.0f;
+	
+	private PlayerInput _playerInput;
+	private InputAction _singleTouchInputAction;
+	private InputAction _moveInputAction;
+	private Vector2 _touchLastPosition;
+	
 	public enum DragDirection
 	{
 		None,
@@ -21,88 +28,115 @@ public class InputManager : Singleton<InputManager>
 		Left,
 		Right
 	}
-	
-	public enum DragState
-	{
-		DragStart,
-		Dragging,
-		DragEnd
-	}
 
 	protected override void Awake()
 	{
 		base.Awake();
+		PlayerInputEnabled = false;
+		
 		_playerInput = GetComponent<PlayerInput>();
 		_singleTouchInputAction = _playerInput.actions.FindAction("SingleTouch");
-		_dragInputAction = _playerInput.actions.FindAction("Drag");
+		_moveInputAction = _playerInput.actions.FindAction("Move");
 	}
 
 	private void OnEnable()
 	{
-		_singleTouchInputAction.performed += PerformSingleTouch;
-		_dragInputAction.started += StartDrag;
-		_dragInputAction.performed += PerformDrag;
-		_dragInputAction.canceled += CancelDrag;
+		_singleTouchInputAction.performed += TryToRotate;
+		_moveInputAction.performed += TryToMove;
 	}
 
 	private void OnDisable()
 	{
-		_singleTouchInputAction.performed -= PerformSingleTouch;
-		_dragInputAction.started -= StartDrag;
-		_dragInputAction.performed -= PerformDrag;
-		_dragInputAction.canceled -= CancelDrag;
+		_singleTouchInputAction.performed -= TryToRotate;
+		_moveInputAction.performed -= TryToMove;
+	}
+
+	public void EnablePlayerInput(bool enable)
+	{
+		PlayerInputEnabled = enable;
 	}
 	
-	private void PerformSingleTouch(InputAction.CallbackContext context)
+	private void TryToRotate(InputAction.CallbackContext context)
 	{
-		var value = context.ReadValueAsButton();
-		Debug.Log("touched" + value);
-	}
-
-	private void StartDrag(InputAction.CallbackContext context)
-	{
-		Debug.Log("drag start");
-		DragDirection dragDirection = DragDirection.None;
-		var value = context.ReadValue<Vector2>();
-		dragDirection = GetDragDirection(value);
-		_dragAction?.Invoke(dragDirection, DragState.DragStart);
-	}
-
-	private void CancelDrag(InputAction.CallbackContext context)
-	{
-		Debug.Log("drag cancel");
-		_dragAction?.Invoke(DragDirection.None, DragState.DragEnd);
-	}
-
-	private void PerformDrag(InputAction.CallbackContext context)
-	{
-		DragDirection dragDirection = DragDirection.None;
-		var value = context.ReadValue<Vector2>();
-		dragDirection = GetDragDirection(value);
-		Debug.Log("dragging");
-		_dragAction?.Invoke(dragDirection, DragState.Dragging);
+		Vector2 touchPosition = Touchscreen.current.primaryTouch.position.ReadValue();
+		if (!IsTouchOverUI(touchPosition) && PlayerInputEnabled)
+		{
+			Rotate?.Invoke();
+		}
 	}
 	
+	private void TryToMove(InputAction.CallbackContext context)
+	{
+		if (!PlayerInputEnabled)
+		{
+			return;	
+		}
+		
+		if (Touchscreen.current.primaryTouch.phase.ReadValue() == TouchPhase.Began)
+		{
+			// If the touch just started, record the touch position
+			_touchLastPosition = Touchscreen.current.primaryTouch.position.ReadValue();
+		}
+		else
+		{
+			if (IsTouchOverUI(_touchLastPosition))
+			{
+				return;
+			}
+			Vector2 currentTouchPos = context.ReadValue<Vector2>();
+			// Calculate the distance moved since the last frame
+			float distanceMoved = Vector2.Distance(currentTouchPos, _touchLastPosition);
+			// Check if the distance moved is greater than the threshold to send move action
+			if (distanceMoved >= _moveDistanceThreshold)
+			{
+				Vector2 direction = _touchLastPosition - currentTouchPos;
+				if (direction.magnitude > 0)
+				{
+					DragDirection dragDirection = GetDragDirection(direction);
+					Debug.Log("Move " + dragDirection );
+					Move?.Invoke(dragDirection);
+				}
+				// Update the last touch position for the next frame
+				_touchLastPosition = currentTouchPos;
+			}
+		}
+	}
+
+	private static bool IsTouchOverUI(Vector2 touchPosition)
+	{
+		PointerEventData eventData = new PointerEventData(EventSystem.current);
+		eventData.position = touchPosition;
+		List<RaycastResult> results = new List<RaycastResult>();
+		EventSystem.current.RaycastAll(eventData, results);
+		foreach (RaycastResult result in results)
+		{
+			if (result.gameObject.GetComponent<Graphic>() != null)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private static DragDirection GetDragDirection(Vector2 value)
 	{
 		if (Mathf.Abs(value.x) > Mathf.Abs(value.y))
 		{
 			if (value.x > 0)
 			{
+				return DragDirection.Left;
+			} 
+			
+			if (value.x < 0){
 				return DragDirection.Right;
 			}
-			else if (value.x < 0)
-			{
-				return DragDirection.Left;
-			}
 		}
-		else if (Mathf.Abs(value.y) > Mathf.Abs(value.x) && value.y < 0)
+		else if (Mathf.Abs(value.y) > Mathf.Abs(value.x) && value.y > 0)
 		{
 			return DragDirection.Down;
 		}
-
+		
 		return DragDirection.None;
 	}
-
 }
 

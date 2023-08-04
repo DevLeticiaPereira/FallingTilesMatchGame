@@ -12,10 +12,10 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": true
                 },
                 {
-                    "name": "Drag",
+                    "name": "Move",
                     "type": "Value",
                     "id": "76d92c16-9987-47ae-81ab-6f36fcd8b18b",
                     "expectedControlType": "Vector2",
@@ -38,12 +38,12 @@
                 },
                 {
                     "name": "",
-                    "id": "ae1f55fe-4eac-4d6a-9f7d-e14d66d83fc9",
-                    "path": "<Touchscreen>/primaryTouch/delta",
+                    "id": "b9f69c6a-aa92-4da8-9d80-0a852a0159db",
+                    "path": "<Touchscreen>/primaryTouch/position",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Drag",
+                    "action": "Move",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -5,6 +5,7 @@ public class RunningGameState : GameState
     public override void Enter()
     {
         base.Enter();
+        InputManager.Instance.EnablePlayerInput(true);
     }
 
     public override void Update()
@@ -15,5 +16,6 @@ public class RunningGameState : GameState
     public override void Exit()
     {
         base.Exit();
+        InputManager.Instance.EnablePlayerInput(false);
     }
 }

@@ -1088,7 +1088,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!114 &6804732353120614372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1119,10 +1119,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _canvas: {fileID: 6804732353120614374}
+  _graphicRaycaster: {fileID: 0}
   _endGameWindow: {fileID: 5486095775428321959}
   _scoreText: {fileID: 3697857023558566727}
   _highScoreText: {fileID: 3757298952721522880}
-  _exitGameConfirmMessage: Do you really and to exit the game?
 --- !u!1 &7397204289397306370
 GameObject:
   m_ObjectHideFlags: 0

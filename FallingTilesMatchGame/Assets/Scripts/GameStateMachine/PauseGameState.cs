@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PauseGameState : GameState
 {
-    public PauseGameState(GameManager gameManager, GameplayStateMachine gameplayStateMachine) : base(gameManager, gameplayStateMachine) { }
+    public PauseGameState(GameManager gameManager, StateMachine<GameState> gameStateMachine ) : base(gameManager, gameStateMachine) { }
 
     public override void Enter()
     {

@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb116282f88cf04aab4bb187e14f1d0, type: 3}
+  m_Name: YellowTile
+  m_EditorClassIdentifier: 
+  _colorTile: 4
+  _defaultSprite: {fileID: -380982190, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  _rootTileSprite: {fileID: -794113188, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  _deathAnimation: {fileID: 7400000, guid: a98ad70e4cd9161458f5cdf4788f9309, type: 2}
+  _tilesConnectionData:
+  - _tileConnection: 0
+    _sprite: {fileID: -380982190, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 8
+    _sprite: {fileID: 970877941, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 4
+    _sprite: {fileID: 1894615008, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 12
+    _sprite: {fileID: -309676774, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 1
+    _sprite: {fileID: 458764105, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 9
+    _sprite: {fileID: -343576107, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 5
+    _sprite: {fileID: 914629861, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 13
+    _sprite: {fileID: 382624628, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 2
+    _sprite: {fileID: 428032473, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 10
+    _sprite: {fileID: 356791837, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 6
+    _sprite: {fileID: 49739558, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 14
+    _sprite: {fileID: -162221054, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 3
+    _sprite: {fileID: -977999063, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 11
+    _sprite: {fileID: 1852601582, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: 7
+    _sprite: {fileID: 1323336113, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}
+  - _tileConnection: -1
+    _sprite: {fileID: 1056869427, guid: 47efe8f8f5f24094d84ca788d45e2c5f, type: 3}

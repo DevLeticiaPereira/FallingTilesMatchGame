@@ -1,28 +1,28 @@
 using UnityEngine;
 
-public class GameState
+public class GameState : BaseState
 {
-    protected GameplayStateMachine _gameplayStateMachine;
+    protected StateMachine<GameState> _gameStateMachine;
     protected GameManager _gameManager;
     protected float _stateTimer;
     
-    public GameState(GameManager gameManager, GameplayStateMachine gameplayStateMachine)
+    public GameState(GameManager gameManager, StateMachine<GameState> gameStateMachine)
     {
         this._gameManager = gameManager;
-        this._gameplayStateMachine = gameplayStateMachine;
+        this._gameStateMachine = gameStateMachine;
     }
 
-    public virtual void Enter()
+    public override void Enter()
     {
         
     }
 
-    public virtual void Update()
+    public override void Update()
     {
         _stateTimer -= Time.deltaTime;
     }
 
-    public virtual void Exit()
+    public override void Exit()
     {
         
     }

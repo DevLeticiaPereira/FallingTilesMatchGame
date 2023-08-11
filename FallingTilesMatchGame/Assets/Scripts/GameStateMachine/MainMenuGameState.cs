@@ -5,7 +5,7 @@ using Managers;
 
 public class MainMenuGameState : GameState
 {
-    public MainMenuGameState(GameManager gameManager, GameplayStateMachine gameplayStateMachine) : base(gameManager, gameplayStateMachine) { }
+    public MainMenuGameState(GameManager gameManager,StateMachine<GameState> gameStateMachine) : base(gameManager, gameStateMachine) { }
 
     public override void Enter()
     {

@@ -7,7 +7,6 @@ namespace UI
 {
     public class Panel : MonoBehaviour
     {
-        [SerializeField] private Canvas _canvas;
         private GraphicRaycaster _graphicRaycaster;
         protected UIManager.PanelType _type;
     
@@ -28,10 +27,9 @@ namespace UI
             UIManager.PanelFocusExited -= OnPanelFocusExit;
         }
         
-        public void Initialize(UIManager.PanelType type, Camera camera)
+        public void Initialize(UIManager.PanelType type)
         {
             _type = type;
-            _canvas.worldCamera = camera;
         }
     
         public void Unload()

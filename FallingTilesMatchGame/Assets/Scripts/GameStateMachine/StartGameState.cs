@@ -1,7 +1,9 @@
+using System;
+
 public class StartGameState : GameState
 {
-    public StartGameState(GameManager gameManager, GameplayStateMachine gameplayStateMachine) : base(gameManager, gameplayStateMachine) { }
-
+    public StartGameState(GameManager gameManager, StateMachine<GameState> gameStateMachine) : base(gameManager, gameStateMachine) { }
+    public static event Action OnGameStart;
     public override void Enter()
     {
         base.Enter();
@@ -14,15 +16,15 @@ public class StartGameState : GameState
     {
         base.Update();
         
-        //Todo: remove temporary code - change from start to running
         if (_stateTimer <= 0)
         {
-            _gameplayStateMachine.ChangeState(_gameManager.RunningState);
+            _gameStateMachine.ChangeState(_gameManager.RunningState);
         }
     }
 
     public override void Exit()
     {
         base.Exit();
+        OnGameStart?.Invoke();
     }
 }

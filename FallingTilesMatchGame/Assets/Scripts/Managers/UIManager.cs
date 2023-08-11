@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UI;
 using UnityEngine;
 
@@ -9,15 +8,12 @@ namespace Managers
     public class UIManager : Singleton<UIManager>
     {
         [SerializeField] private List<PanelInfo> _panelsInfo;
-        [SerializeField] private Camera _uiCamera;
 
         private Dictionary<PanelType, GameObject> _panels = new Dictionary<PanelType, GameObject>();
         private Dictionary<PanelType, GameObject> _panelPrefabs = new Dictionary<PanelType, GameObject>();
         private RectTransform _rectTransform;
         private List<PanelType> _openedPanelsOrder = new List<PanelType>();
-
         public PanelType PanelOnFocus { get; private set; }
-
         public static event Action<PanelType> PanelFocusEntered;
         public static event Action<PanelType> PanelFocusExited;
 
@@ -64,8 +60,8 @@ namespace Managers
             }
             
             _panels[panelType] = panel;
-            panelComponent.Initialize(panelType, _uiCamera);
-            Utilities.AddUniqueToList(ref _openedPanelsOrder, panelType);
+            panelComponent.Initialize(panelType/*, _uiCamera*/);
+            Utilities.Utilities.AddUniqueToList(ref _openedPanelsOrder, panelType);
             SetFocusTo(panelType);
             return true;
         }

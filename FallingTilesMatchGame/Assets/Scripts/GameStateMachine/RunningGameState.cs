@@ -1,21 +1,30 @@
+using System;
+
 public class RunningGameState : GameState
 {
-    public RunningGameState(GameManager gameManager, GameplayStateMachine gameplayStateMachine) : base(gameManager, gameplayStateMachine) { }
-
+    public RunningGameState(GameManager gameManager, StateMachine<GameState> gameStateMachine) : base(gameManager, gameStateMachine) { }
+    public static event Action OnGameStartRunning;
+    public static event Action OnGameStopRunning;
+        
     public override void Enter()
     {
         base.Enter();
-        InputManager.Instance.EnablePlayerInput(true);
+        OnGameStartRunning?.Invoke();
+        EventManager.EventGridGameOver += OnGridGameOver;
     }
 
-    public override void Update()
+    private void OnGridGameOver(Guid gridID)
     {
-        base.Update();
+        if (_gameManager.NumberOfPlayers == 1)
+        {
+            _gameManager.StateMachine.ChangeState(_gameManager.EndState);
+        }
     }
 
     public override void Exit()
     {
         base.Exit();
-        InputManager.Instance.EnablePlayerInput(false);
+        OnGameStopRunning?.Invoke();
+        EventManager.EventGridGameOver -= OnGridGameOver;
     }
 }

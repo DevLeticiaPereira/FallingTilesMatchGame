@@ -9,7 +9,7 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 public class InputManager : Singleton<InputManager>
 {
 	public static event Action Rotate;
-	public static event Action<DragDirection> Move;
+	public static event Action<DragHorizontalDirection> MoveHorizontal;
 	
 	public bool PlayerInputEnabled { get; private set; }
 	
@@ -21,10 +21,9 @@ public class InputManager : Singleton<InputManager>
 	private InputAction _moveInputAction;
 	private Vector2 _touchLastPosition;
 	
-	public enum DragDirection
+	public enum DragHorizontalDirection
 	{
 		None,
-		Down,
 		Left,
 		Right
 	}
@@ -32,6 +31,7 @@ public class InputManager : Singleton<InputManager>
 	protected override void Awake()
 	{
 		base.Awake();
+		
 		PlayerInputEnabled = false;
 		
 		_playerInput = GetComponent<PlayerInput>();
@@ -42,13 +42,17 @@ public class InputManager : Singleton<InputManager>
 	private void OnEnable()
 	{
 		_singleTouchInputAction.performed += TryToRotate;
-		_moveInputAction.performed += TryToMove;
+		_moveInputAction.performed += TryToMoveHorizontal;
+		RunningGameState.OnGameStartRunning += () => {EnablePlayerInput(true);};
+		RunningGameState.OnGameStopRunning += () => {EnablePlayerInput(false);};
 	}
 
 	private void OnDisable()
 	{
 		_singleTouchInputAction.performed -= TryToRotate;
-		_moveInputAction.performed -= TryToMove;
+		_moveInputAction.performed -= TryToMoveHorizontal;
+		RunningGameState.OnGameStartRunning -= () => {EnablePlayerInput(true);};
+		RunningGameState.OnGameStopRunning -= () => {EnablePlayerInput(false);};
 	}
 
 	public void EnablePlayerInput(bool enable)
@@ -65,7 +69,7 @@ public class InputManager : Singleton<InputManager>
 		}
 	}
 	
-	private void TryToMove(InputAction.CallbackContext context)
+	private void TryToMoveHorizontal(InputAction.CallbackContext context)
 	{
 		if (!PlayerInputEnabled)
 		{
@@ -92,9 +96,8 @@ public class InputManager : Singleton<InputManager>
 				Vector2 direction = _touchLastPosition - currentTouchPos;
 				if (direction.magnitude > 0)
 				{
-					DragDirection dragDirection = GetDragDirection(direction);
-					Debug.Log("Move " + dragDirection );
-					Move?.Invoke(dragDirection);
+					DragHorizontalDirection dragHorizontalDirection = GetDragDirection(direction);
+					MoveHorizontal?.Invoke(dragHorizontalDirection);
 				}
 				// Update the last touch position for the next frame
 				_touchLastPosition = currentTouchPos;
@@ -118,25 +121,20 @@ public class InputManager : Singleton<InputManager>
 		return false;
 	}
 
-	private static DragDirection GetDragDirection(Vector2 value)
+	private static DragHorizontalDirection GetDragDirection(Vector2 value)
 	{
 		if (Mathf.Abs(value.x) > Mathf.Abs(value.y))
 		{
 			if (value.x > 0)
 			{
-				return DragDirection.Left;
+				return DragHorizontalDirection.Left;
 			} 
 			
 			if (value.x < 0){
-				return DragDirection.Right;
+				return DragHorizontalDirection.Right;
 			}
 		}
-		else if (Mathf.Abs(value.y) > Mathf.Abs(value.x) && value.y > 0)
-		{
-			return DragDirection.Down;
-		}
-		
-		return DragDirection.None;
+		return DragHorizontalDirection.None;
 	}
 }
 

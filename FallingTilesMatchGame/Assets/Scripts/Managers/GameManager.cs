@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Managers;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,10 +10,17 @@ public class GameManager : Singleton<GameManager>
 	[SerializeField] private string _mainMenuSceneName;
 	[SerializeField] private string _gameSceneSuffix;
 	[SerializeField] private string _exitGameConfirmMessage = "Do you really want to exit the game?";
-	private int _numberOfPlayer;
+	
+	//todo: make a game rules scriptable and take this out of here
+	[SerializeField] private int _minNumberOfTilesToMatch = 4;
+
+	private Dictionary<Guid, int> GridAndPlayerMap = new Dictionary<Guid, int>();
+	public int PlayerScore { get; private set; }
+	public int NumberOfPlayers { get; private set; }
+	public int MinNumberOfTilesToMatch => _minNumberOfTilesToMatch;
 	
 	#region States
-	public GameplayStateMachine StateMachine { get; private set; }
+	public StateMachine<GameState> StateMachine { get; private set; }
 	public MainMenuGameState MenuState { get; private set; }
 	public StartGameState StartState { get; private set; }
 	public RunningGameState RunningState { get; private set; }
@@ -20,19 +28,23 @@ public class GameManager : Singleton<GameManager>
 	public PauseGameState PauseState { get; private set; }
 	
 	#endregion
-	
+
+	#region Monobehavior Funtions
 	protected override void Awake()
 	{
 		base.Awake();
 
-		StateMachine = new GameplayStateMachine();
-
+		StateMachine = new StateMachine<GameState>();
+		
 		MenuState = new MainMenuGameState(this, StateMachine);
 		StartState = new StartGameState(this, StateMachine);
 		RunningState = new RunningGameState(this, StateMachine);
 		EndState = new EndGameState(this, StateMachine);
 		PauseState = new PauseGameState(this, StateMachine);
-		
+	}
+
+	private void Start()
+	{
 		StateMachine.Initialize(MenuState);
 	}
 
@@ -48,11 +60,18 @@ public class GameManager : Singleton<GameManager>
 
 	private void Update()
 	{
-		StateMachine.CurrenState.Update();
+		StateMachine.CurrentState.Update();
 	}
-	
+	#endregion
+
+	#region Event Subscription
 	private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
 	{
+		if (StateMachine.CurrentState == null)
+		{
+			return;
+		}
+		
 		if (scene.name.Contains(_gameSceneSuffix))
 		{
 			StateMachine.ChangeState(StartState);
@@ -62,7 +81,14 @@ public class GameManager : Singleton<GameManager>
 			StateMachine.ChangeState(MenuState);
 		}
 	}
-	
+	#endregion
+
+	#region Public Functions
+
+	public void UpdatePlayerScore(int newScore)
+	{
+		PlayerScore = newScore;
+	}
 	public void ExitGame()
 	{
 		bool success = UIManager.Instance.ShowConfirmPanel(_exitGameConfirmMessage, 
@@ -73,7 +99,6 @@ public class GameManager : Singleton<GameManager>
 			StateMachine.ChangeState(PauseState);
 		}
 	}
-
 	public void PauseGame(bool pause)
 	{
 		// only toggle pause panel if change state was a success
@@ -86,18 +111,6 @@ public class GameManager : Singleton<GameManager>
 			UIManager.Instance.UnloadPanel(UIManager.PanelType.Pause);
 		}
 	}
-	
-	public void LoadMainMenu()
-	{
-		if (!Application.CanStreamedLevelBeLoaded(_mainMenuSceneName))
-		{
-			Debug.LogError($"Scene {_mainMenuSceneName} cannot be loaded.");
-			return;
-		}
-		UIManager.Instance.UnloadAll();
-		SceneManager.LoadScene(_mainMenuSceneName);
-	}
-	
 	public void LoadGameScene(int numberOfPlayers)
 	{
 		string sceneName = numberOfPlayers.ToString() + _gameSceneSuffix;
@@ -108,7 +121,28 @@ public class GameManager : Singleton<GameManager>
 		};
 		
 		UIManager.Instance.UnloadAll();
-		_numberOfPlayer = numberOfPlayers;
+		NumberOfPlayers = numberOfPlayers;
 		SceneManager.LoadScene(sceneName);
 	}
+
+	public void GameEnd()
+	{
+		StateMachine.ChangeState(EndState);
+	}
+	#endregion
+
+	#region Private Functions
+	public void LoadMainMenu()
+	{
+		if (!Application.CanStreamedLevelBeLoaded(_mainMenuSceneName))
+		{
+			Debug.LogError($"Scene {_mainMenuSceneName} cannot be loaded.");
+			return;
+		}
+		UIManager.Instance.UnloadAll();
+		SceneManager.LoadScene(_mainMenuSceneName);
+		PlayerScore = 0;
+	}
+	
+	#endregion
 }

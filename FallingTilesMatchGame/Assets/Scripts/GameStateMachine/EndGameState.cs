@@ -1,19 +1,24 @@
 public class EndGameState : GameState
 {
-    public EndGameState(GameManager gameManager, GameplayStateMachine gameplayStateMachine) : base(gameManager, gameplayStateMachine) { }
+    private float _endGameScreenTime = 3.0f;
+    public EndGameState(GameManager gameManager, StateMachine<GameState> gameStateMachine) : base(gameManager, gameStateMachine) { }
 
     public override void Enter()
     {
         base.Enter();
+        _stateTimer = _endGameScreenTime;
     }
 
     public override void Update()
     {
         base.Update();
+        if (_stateTimer <= 0)
+        {
+            _gameManager.LoadMainMenu();
+        }
     }
 
     public override void Exit()
     {
-        base.Exit();
     }
 }

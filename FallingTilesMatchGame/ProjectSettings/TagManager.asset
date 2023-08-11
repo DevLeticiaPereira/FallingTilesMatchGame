@@ -8,11 +8,11 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - background
   - Water
   - UI
   - LineRenderer
-  - Letters
+  - Blocks
   - 
   - 
   - 
@@ -43,4 +43,13 @@ TagManager:
     locked: 0
   - name: LineRenderer
     uniqueID: 2738709535
+    locked: 0
+  - name: Background
+    uniqueID: 1166456719
+    locked: 0
+  - name: Blocks
+    uniqueID: 1629295477
+    locked: 0
+  - name: Tiles
+    uniqueID: 3729697729
     locked: 0

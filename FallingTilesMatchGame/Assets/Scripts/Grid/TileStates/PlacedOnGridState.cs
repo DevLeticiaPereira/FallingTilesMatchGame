@@ -40,22 +40,42 @@ namespace Grid.TileStates
             _neighborConnectionMap = GetNeighborGridPositions(_gridPosition);
         }
         
-        private void OnEventGridChanged(Guid gridID, Vector2Int gridPositionChanged, TileData.TileColor tileColor)
+        private void OnEventGridChanged(Guid gridID, HashSet<Vector2Int> gridPositionsChanged)
         {
             if (gridID != _gridManager.GridID)
             {
                 return;
             }
 
-            if (!_neighborConnectionMap.ContainsKey(gridPositionChanged) && gridPositionChanged != _gridPosition)
+            // if tile's position changed and grids position is now empty, change state to matched
+            if (gridPositionsChanged.Contains(_gridPosition) && GridUtilities.IsGridPositionAvailable(_gridManager.Grid, _gridPosition))
             {
+                TileOwner.TileStateMachine.ChangeState(TileOwner.MatchedTileState);
                 return;
             }
-
-            Connections = GetTileConnections();
-            TileOwner.UpdateTileSpriteWithConnections(Connections);
+            
+            //if any of the changed position is one of neighbors positions update connections and sprites
+            //check for down tile
+            foreach (var gridPositionChanged in gridPositionsChanged)
+            {
+                if (_neighborConnectionMap.ContainsKey(gridPositionChanged) || gridPositionChanged != _gridPosition)
+                {
+                    Connections = GetTileConnections();
+                    TileOwner.UpdateTileSpriteWithConnections(Connections);
+                    CheckForDownTile();
+                    break;
+                }
+            }
         }
-        
+
+        private void CheckForDownTile()
+        {
+            if (Connections.HasFlag(TileData.TileConnections.Down))
+            {
+                TileOwner.TileStateMachine.ChangeState(TileOwner.FallingTileState);
+            }
+        }
+
         private Dictionary<Vector2Int, TileData.TileConnections> GetNeighborGridPositions(Vector2Int gridPosition)
         {
             Dictionary<Vector2Int, TileData.TileConnections> adjacentGridPositions = new Dictionary<Vector2Int, TileData.TileConnections>();

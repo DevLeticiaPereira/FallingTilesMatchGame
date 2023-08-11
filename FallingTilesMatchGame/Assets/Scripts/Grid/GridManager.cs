@@ -46,7 +46,8 @@ namespace Grid
         //All tiles that are current falling
         private HashSet<Tile> _fallingTiles = new HashSet<Tile>();
         private HashSet<Vector2Int> _gridPositionsToCheck = new HashSet<Vector2Int>();
-
+        private int _tileOnMatchingState;
+        
         private Vector2Int _startGridPositionTile1;
         private Vector2Int _startGridPositionTile2;
         private GameObject _spawnMarker;
@@ -61,11 +62,13 @@ namespace Grid
         {
             StartGameState.OnGameStart += ActivateWaitingPair;
             EventManager.EventTileReachedGrid += OnTileReachedGrid;
+            EventManager.EventTileDestroyed += OnTileDestroyed;
         }
         private void OnDisable()
         {
             StartGameState.OnGameStart -= ActivateWaitingPair;
             EventManager.EventTileReachedGrid -= OnTileReachedGrid;
+            EventManager.EventTileDestroyed += OnTileDestroyed;
         }
         private void Awake()
         {
@@ -99,19 +102,14 @@ namespace Grid
             {
                 return;
             }
-
-            if (!GridUtilities.IsGridPositionAvailable(Grid, _startGridPositionTile1))
-            {
-                EventManager.InvokeGridGameOver(GridID);
-            }
-
+            
             _fallingTiles.Remove(tile);
             _gridPositionsToCheck.Add(gridPosition);
-            
             if (_fallingTiles.Count > 0)
             {
                 return;
             }
+            EventManager.InvokeGridHasChanged(GridID, _gridPositionsToCheck);
 
             HashSet<Vector2Int> gridPositionsMatched = new HashSet<Vector2Int>();
             foreach (var gridPositionToCheck in _gridPositionsToCheck)
@@ -123,19 +121,36 @@ namespace Grid
                 }
             }
             _gridPositionsToCheck.Clear();
-            
-            if (gridPositionsMatched.Count == 0)
-            {
-                ActivateWaitingPair();
-                return;
-            }
-
             foreach (var gridPositionMatched in gridPositionsMatched)
             {
                 RemoveTileFromGrid(gridPositionMatched);
             }
+            EventManager.InvokeGridHasChanged(GridID, gridPositionsMatched);
+            _tileOnMatchingState = gridPositionsMatched.Count;
+            
+            if (gridPositionsMatched.Count == 0)
+            {
+                ActivateWaitingPair();
+            }
+            
+            if (!GridUtilities.IsGridPositionAvailable(Grid, _startGridPositionTile1))
+            {
+                EventManager.InvokeGridGameOver(GridID);
+            }
         }
-        
+        private void OnTileDestroyed(Guid id)
+        {
+            if (id != GridID)
+            {
+                return; 
+            }
+            
+            --_tileOnMatchingState;
+            if (_tileOnMatchingState <= 0 && _fallingTiles.Count <= 0)
+            {
+                ActivateWaitingPair();
+            }
+        }
         #endregion
 
         #region Private Methods
@@ -149,7 +164,6 @@ namespace Grid
             cell.Tile = tile;
             cell.TileColor = tile.Data.ColorTile;
             tile.SetGridPosition(gridPosition);
-            EventManager.InvokeGridHasChanged(GridID, gridPosition, cell.TileColor);
             return true;
         }
 
@@ -158,7 +172,6 @@ namespace Grid
             CellInfo cell = Grid[gridPosition];
             cell.Tile = null;
             cell.TileColor = TileData.TileColor.None;
-            EventManager.InvokeGridHasChanged(GridID, gridPosition, cell.TileColor);
         }
 
         private void ActivateWaitingPair()

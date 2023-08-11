@@ -7,8 +7,9 @@ public static class EventManager
 {
     public static event Action<Guid, Vector2Int, Tile> EventTileReachedGrid;
     public static event Action<Guid, Dictionary<Tile, Vector2Int>> EventPlacedTileAtGridPosition;
-    public static event Action<Guid, Vector2Int, TileData.TileColor> EventGridHasChanged;
+    public static event Action<Guid, HashSet<Vector2Int>> EventGridHasChanged;
     public static event Action<Guid> EventGridGameOver;
+    public static event Action<Guid> EventTileDestroyed;
 
     public static void InvokeTileReachedGrid(Guid gridID, Vector2Int gridPosition, Tile tile)
     {
@@ -20,13 +21,17 @@ public static class EventManager
         EventPlacedTileAtGridPosition?.Invoke(gridID, tilesMoved);
     }
     
-    public static void InvokeGridHasChanged(Guid gridID, Vector2Int gridPosition, TileData.TileColor color)
+    public static void InvokeGridHasChanged(Guid gridID, HashSet<Vector2Int> gridPosition)
     {
-        EventGridHasChanged?.Invoke(gridID, gridPosition, color);
+        EventGridHasChanged?.Invoke(gridID, gridPosition);
     }
 
     public static void InvokeGridGameOver(Guid gridID)
     {
         EventGridGameOver?.Invoke(gridID);
+    }
+    public static void InvokeGridEventTileDestroyed(Guid gridID)
+    {
+        EventTileDestroyed?.Invoke(gridID);
     }
 }

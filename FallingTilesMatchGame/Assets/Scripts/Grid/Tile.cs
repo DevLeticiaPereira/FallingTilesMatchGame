@@ -71,6 +71,7 @@ namespace Grid
         }
         public void Destroy()
         {
+            EventManager.InvokeGridEventTileDestroyed(_gridManager.GridID);
             Destroy(this.gameObject);
         }
         #endregion

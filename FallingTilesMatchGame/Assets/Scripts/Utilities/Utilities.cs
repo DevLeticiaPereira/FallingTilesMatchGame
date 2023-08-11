@@ -1,23 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using Grid;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace Utilities
 {
-    public class CellInfo
-    {
-        public Vector2 WorldPosition;
-
-        public CellInfo(Vector2 worldPosition)
-        {
-            WorldPosition = worldPosition;
-            
-        }
-
-        public TileData.TileColor TileColor = TileData.TileColor.None;
-        public Tile Tile;
-    }
-
     public static class Utilities
     {
         public static void AddUniqueToList<T>(ref List<T> list, T element)
@@ -28,9 +16,30 @@ namespace Utilities
             }
         }
     }
-
     public static class GridUtilities
     {
+        public class CellInfo
+        {
+            public Vector2 WorldPosition;
+
+            public CellInfo(Vector2 worldPosition)
+            {
+                WorldPosition = worldPosition;
+            
+            }
+
+            public TileData.TileColor TileColor = TileData.TileColor.None;
+            public Tile Tile;
+        }
+        
+        public enum GridChangedReason 
+        {
+            None,
+            TileAdded,
+            TileMatched,
+            TileFell
+        }
+        
         public static Vector2Int GetAdjacentGridPosition(Vector2Int gridPosition, TileData.TileConnections direction)
         {
             int x = gridPosition.x;

@@ -40,18 +40,29 @@ namespace Grid.TileStates
             _neighborConnectionMap = GetNeighborGridPositions(_gridPosition);
         }
         
-        private void OnEventGridChanged(Guid gridID, HashSet<Vector2Int> gridPositionsChanged)
+        private void OnEventGridChanged(Guid gridID, HashSet<Vector2Int> gridPositionsChanged, GridUtilities.GridChangedReason gridChangedReason)
         {
             if (gridID != _gridManager.GridID)
             {
                 return;
             }
-
+            
             // if tile's position changed and grids position is now empty, change state to matched
             if (gridPositionsChanged.Contains(_gridPosition) && GridUtilities.IsGridPositionAvailable(_gridManager.Grid, _gridPosition))
             {
-                TileOwner.TileStateMachine.ChangeState(TileOwner.MatchedTileState);
-                return;
+                //matched tile is the one listening, hes was remove, so hell move to matched state
+                if (gridChangedReason == GridUtilities.GridChangedReason.TileMatched)
+                {
+                    TileOwner.TileStateMachine.ChangeState(TileOwner.MatchedTileState);
+                    return;
+                }
+                
+                if (gridChangedReason == GridUtilities.GridChangedReason.TileFell)
+                {
+                    TileOwner.SetTemporaryGridPosition(_gridPosition, false);
+                    TileOwner.TileStateMachine.ChangeState(TileOwner.FallingTileState);
+                    return;
+                }
             }
             
             //if any of the changed position is one of neighbors positions update connections and sprites
@@ -68,12 +79,15 @@ namespace Grid.TileStates
             }
         }
 
-        private void CheckForDownTile()
+        private bool CheckForDownTile()
         {
-            if (Connections.HasFlag(TileData.TileConnections.Down))
+            Vector2Int downTile = new Vector2Int(_gridPosition.x, _gridPosition.y - 1);
+            if (!GridUtilities.IsGridPositionAvailable(_gridManager.Grid, downTile))
             {
-                TileOwner.TileStateMachine.ChangeState(TileOwner.FallingTileState);
+                return false;
             }
+            EventManager.InvokeEventTileShouldFallFromPosition(_gridManager.GridID, _gridPosition);
+            return true;
         }
 
         private Dictionary<Vector2Int, TileData.TileConnections> GetNeighborGridPositions(Vector2Int gridPosition)

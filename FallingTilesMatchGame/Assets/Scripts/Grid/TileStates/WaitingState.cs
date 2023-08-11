@@ -26,7 +26,7 @@ namespace Grid.TileStates
                 return;
             }
 
-            var gridPosition = tilesToPlaceInfo[TileOwner]; 
+            var gridPosition = tilesToPlaceInfo[TileOwner];
             TileOwner.SetTemporaryGridPosition(gridPosition, true);
             TileOwner.TileStateMachine.ChangeState(TileOwner.FallingTileState);
         }

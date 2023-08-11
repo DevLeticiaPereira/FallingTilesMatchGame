@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Random = UnityEngine.Random;
-using Grid.TileStates;
 using Utilities;
 
 namespace Grid
@@ -30,8 +29,8 @@ namespace Grid
         public Guid GridID { get; private set; }
 
         //dictionary that links grid position to each cell info
-        public Dictionary<Vector2Int, CellInfo> Grid { get; private set; } =
-            new Dictionary<Vector2Int, Utilities.CellInfo>();
+        public Dictionary<Vector2Int, GridUtilities.CellInfo> Grid { get; private set; } =
+            new Dictionary<Vector2Int, GridUtilities.CellInfo>();
 
         //Dictionary that links the tile type to its data
         private Dictionary<TileData.TileColor, TileData> _tilesDataDictionary = new Dictionary<TileData.TileColor, TileData>();
@@ -44,8 +43,9 @@ namespace Grid
         //The pair that is taking from the waiting list and add at the top of the grid
         //private (Tile, Tile) _activatedFallingPair = (null, null);
         //All tiles that are current falling
-        private HashSet<Tile> _fallingTiles = new HashSet<Tile>();
+        private int _numberOfFallingTiles = 0;
         private HashSet<Vector2Int> _gridPositionsToCheck = new HashSet<Vector2Int>();
+        private HashSet<Vector2Int> _gridPositionsWaitingToFall = new HashSet<Vector2Int>();
         private int _tileOnMatchingState;
         
         private Vector2Int _startGridPositionTile1;
@@ -63,12 +63,15 @@ namespace Grid
             StartGameState.OnGameStart += ActivateWaitingPair;
             EventManager.EventTileReachedGrid += OnTileReachedGrid;
             EventManager.EventTileDestroyed += OnTileDestroyed;
+            EventManager.EventShouldFallFromPosition += OnShouldFallFromPosition;
         }
+        
         private void OnDisable()
         {
             StartGameState.OnGameStart -= ActivateWaitingPair;
             EventManager.EventTileReachedGrid -= OnTileReachedGrid;
-            EventManager.EventTileDestroyed += OnTileDestroyed;
+            EventManager.EventTileDestroyed -= OnTileDestroyed;
+            EventManager.EventShouldFallFromPosition -= OnShouldFallFromPosition;
         }
         private void Awake()
         {
@@ -102,14 +105,15 @@ namespace Grid
             {
                 return;
             }
-            
-            _fallingTiles.Remove(tile);
+
+            --_numberOfFallingTiles;
             _gridPositionsToCheck.Add(gridPosition);
-            if (_fallingTiles.Count > 0)
+
+            if (_numberOfFallingTiles > 0)
             {
                 return;
             }
-            EventManager.InvokeGridHasChanged(GridID, _gridPositionsToCheck);
+            EventManager.InvokeGridHasChanged(GridID, _gridPositionsToCheck, GridUtilities.GridChangedReason.TileAdded);
 
             HashSet<Vector2Int> gridPositionsMatched = new HashSet<Vector2Int>();
             foreach (var gridPositionToCheck in _gridPositionsToCheck)
@@ -125,7 +129,7 @@ namespace Grid
             {
                 RemoveTileFromGrid(gridPositionMatched);
             }
-            EventManager.InvokeGridHasChanged(GridID, gridPositionsMatched);
+            EventManager.InvokeGridHasChanged(GridID, gridPositionsMatched, GridUtilities.GridChangedReason.TileMatched);
             _tileOnMatchingState = gridPositionsMatched.Count;
             
             if (gridPositionsMatched.Count == 0)
@@ -146,18 +150,40 @@ namespace Grid
             }
             
             --_tileOnMatchingState;
-            if (_tileOnMatchingState <= 0 && _fallingTiles.Count <= 0)
+
+            if (_tileOnMatchingState > 0 || _numberOfFallingTiles > 0)
             {
-                ActivateWaitingPair();
+                return;
             }
+            
+            if (_gridPositionsWaitingToFall.Count > 0)
+            {
+                _numberOfFallingTiles = _gridPositionsWaitingToFall.Count;
+                EventManager.InvokeGridHasChanged(GridID, _gridPositionsWaitingToFall, GridUtilities.GridChangedReason.TileFell);
+                _gridPositionsWaitingToFall.Clear();
+                return;
+            }
+            
+            ActivateWaitingPair();
         }
+        private void OnShouldFallFromPosition(Guid id, Vector2Int gridPosition)
+        {
+            if (id != GridID)
+            {
+                return; 
+            }
+            
+            RemoveTileFromGrid(gridPosition);
+            _gridPositionsWaitingToFall.Add(gridPosition);
+        }
+
         #endregion
 
         #region Private Methods
         
         private bool TryAddTileToGrid(Vector2Int gridPosition, Tile tile)
         {
-            if (!Grid.TryGetValue(gridPosition, out CellInfo cell) || cell.Tile != null)
+            if (!Grid.TryGetValue(gridPosition, out GridUtilities.CellInfo cell) || cell.Tile != null)
             {
                 return false;
             }
@@ -169,7 +195,7 @@ namespace Grid
 
         private void RemoveTileFromGrid(Vector2Int gridPosition)
         {
-            CellInfo cell = Grid[gridPosition];
+            GridUtilities.CellInfo cell = Grid[gridPosition];
             cell.Tile = null;
             cell.TileColor = TileData.TileColor.None;
         }
@@ -185,9 +211,8 @@ namespace Grid
             var tile1 = _waitingPairs[0].Item1; 
             var tile2 = _waitingPairs[0].Item2; 
             _waitingPairs.RemoveAt(0);
-            
-            _fallingTiles.Add(tile1);
-            _fallingTiles.Add(tile2);
+
+            _numberOfFallingTiles += 2;
             
             var tileToMoveInfo =  new Dictionary<Tile, Vector2Int>
             {

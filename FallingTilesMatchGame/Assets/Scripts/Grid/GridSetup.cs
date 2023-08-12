@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,6 +6,11 @@ using UnityEngine;
 public class GridSetup : MonoBehaviour
 {
     [SerializeField] private GridSetupData _gridSetupData;
+
+    private void Awake()
+    {
+        GenerateGrid();
+    }
 
     public void GenerateGrid()
     {

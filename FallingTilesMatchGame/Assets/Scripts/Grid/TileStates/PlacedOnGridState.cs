@@ -22,6 +22,7 @@ namespace Grid.TileStates
         
         private readonly GridManager _gridManager;
         private Vector2Int _gridPosition;
+        private bool _waitingToFall = false;
 
         public PlacedOnGridState(Tile tileOwner, StateMachine<TileState> tileStateMachine, GridManager gridManager) : base(tileOwner, tileStateMachine)
         {
@@ -86,6 +87,8 @@ namespace Grid.TileStates
             {
                 return false;
             }
+
+            _waitingToFall = true;
             EventManager.InvokeEventTileShouldFallFromPosition(_gridManager.GridID, _gridPosition);
             return true;
         }

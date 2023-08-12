@@ -62,6 +62,11 @@ public class InputManager : Singleton<InputManager>
 	
 	private void TryToRotate(InputAction.CallbackContext context)
 	{
+		if (!PlayerInputEnabled)
+		{
+			return;	
+		}
+		
 		Vector2 touchPosition = Touchscreen.current.primaryTouch.position.ReadValue();
 		if (!IsTouchOverUI(touchPosition) && PlayerInputEnabled)
 		{

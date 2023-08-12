@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Managers;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.SocialPlatforms.Impl;
@@ -14,8 +15,8 @@ public class GameManager : Singleton<GameManager>
 	//todo: make a game rules scriptable and take this out of here
 	[SerializeField] private int _minNumberOfTilesToMatch = 4;
 
-	private Dictionary<Guid, int> GridAndPlayerMap = new Dictionary<Guid, int>();
-	public int PlayerScore { get; private set; }
+	private Dictionary<Guid, int> _gridScoreMap = new Dictionary<Guid, int>();
+	public Guid PlayerGrid { get; private set; }
 	public int NumberOfPlayers { get; private set; }
 	public int MinNumberOfTilesToMatch => _minNumberOfTilesToMatch;
 	
@@ -81,14 +82,11 @@ public class GameManager : Singleton<GameManager>
 			StateMachine.ChangeState(MenuState);
 		}
 	}
+
 	#endregion
 
 	#region Public Functions
-
-	public void UpdatePlayerScore(int newScore)
-	{
-		PlayerScore = newScore;
-	}
+	
 	public void ExitGame()
 	{
 		bool success = UIManager.Instance.ShowConfirmPanel(_exitGameConfirmMessage, 
@@ -125,6 +123,20 @@ public class GameManager : Singleton<GameManager>
 		SceneManager.LoadScene(sceneName);
 	}
 
+	public void SignUpGridToGame(Guid gridID, bool isAiControlled)
+	{
+		if (!isAiControlled)
+		{
+			PlayerGrid = gridID;
+		}
+		_gridScoreMap[gridID] = 0;
+	}
+
+	public void UpdateGridScore(Guid gridId, int score)
+	{
+		_gridScoreMap[gridId] = score;
+	}
+
 	public void GameEnd()
 	{
 		StateMachine.ChangeState(EndState);
@@ -141,7 +153,8 @@ public class GameManager : Singleton<GameManager>
 		}
 		UIManager.Instance.UnloadAll();
 		SceneManager.LoadScene(_mainMenuSceneName);
-		PlayerScore = 0;
+		_gridScoreMap.Clear();
+		PlayerGrid = Guid.NewGuid();
 	}
 	
 	#endregion

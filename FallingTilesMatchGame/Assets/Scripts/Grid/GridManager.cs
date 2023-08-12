@@ -82,9 +82,9 @@ namespace Grid
                     _tilesDataDictionary[tileData.ColorTile] = tileData;
                 }
             }
-
-            _gridScoreManager.SetIsAiControlled(_isAiControlled);
+            
             GridID = Guid.NewGuid();
+            GameManager.Instance.SignUpGridToGame(GridID, _isAiControlled);
             LoadTilesSpawnProbability();
             Grid = GridUtilities.GenerateGridCells(this.transform.position, _gridSetupData);
             UpdateGridWaitingPairs();
@@ -100,48 +100,55 @@ namespace Grid
             {
                 return; 
             }
-
+            // ADD TILE THAT REACHED GRID
             if (!TryAddTileToGrid(gridPosition, tile))
             {
                 return;
             }
-
-            --_numberOfFallingTiles;
-            _gridPositionsToCheck.Add(gridPosition);
-
-            if (_numberOfFallingTiles > 0)
+            
+            // GAME OVER CHECK
+            if (!GridUtilities.IsGridPositionAvailable(Grid, _startGridPositionTile1))
             {
+                EventManager.InvokeGridGameOver(GridID);
                 return;
             }
-            EventManager.InvokeGridHasChanged(GridID, _gridPositionsToCheck, GridUtilities.GridChangedReason.TileAdded);
-
-            HashSet<Vector2Int> gridPositionsMatched = new HashSet<Vector2Int>();
-            foreach (var gridPositionToCheck in _gridPositionsToCheck)
+            
+            //UPDATE FLOW CONTROLLER VARIABLES
+            --_numberOfFallingTiles;
+            _gridPositionsToCheck.Add(gridPosition);
+            
+            //IF ANY TILE STILL FALLING DISABLE INPUT AND WAIT FOR NEXT TILE TO REACH GRID
+            if (_numberOfFallingTiles > 0)
             {
-                var connectedGridPosition = GridUtilities.GetChainConnectedTiles(Grid, gridPositionToCheck);
-                if (connectedGridPosition.Count >= GameManager.Instance.MinNumberOfTilesToMatch)
-                {
-                    gridPositionsMatched.UnionWith(connectedGridPosition);
-                }
+                InputManager.Instance.EnablePlayerInput(false);
+                return;
             }
-            _gridPositionsToCheck.Clear();
+            
+            //WARN TILES ABOUT GRID ADDED TILES AND UPDATE ITS CONNECTIONS
+            EventManager.InvokeGridHasChanged(GridID, _gridPositionsToCheck, GridUtilities.GridChangedReason.TileAdded);
+            
+            //HANDLE CHECK FOR MATCH AND WARN TILES IF ANY TILE WAS REMOVED
+            var gridPositionsMatched = CheckForMatches();
             foreach (var gridPositionMatched in gridPositionsMatched)
             {
                 RemoveTileFromGrid(gridPositionMatched);
             }
-            EventManager.InvokeGridHasChanged(GridID, gridPositionsMatched, GridUtilities.GridChangedReason.TileMatched);
+            
+            _gridPositionsToCheck.Clear();
             _tileOnMatchingState = gridPositionsMatched.Count;
             
-            if (gridPositionsMatched.Count == 0)
+            if (gridPositionsMatched.Count>0)
             {
+                _gridScoreManager.AddScoreToGrid(gridPositionsMatched.Count);
+                EventManager.InvokeGridHasChanged(GridID, gridPositionsMatched, GridUtilities.GridChangedReason.TileMatched);
+            }
+            else
+            {
+                InputManager.Instance.EnablePlayerInput(true);
                 ActivateWaitingPair();
             }
-            
-            if (!GridUtilities.IsGridPositionAvailable(Grid, _startGridPositionTile1))
-            {
-                EventManager.InvokeGridGameOver(GridID);
-            }
         }
+        
         private void OnTileDestroyed(Guid id)
         {
             if (id != GridID)
@@ -163,9 +170,10 @@ namespace Grid
                 _gridPositionsWaitingToFall.Clear();
                 return;
             }
-            
+            InputManager.Instance.EnablePlayerInput(true);
             ActivateWaitingPair();
         }
+        
         private void OnShouldFallFromPosition(Guid id, Vector2Int gridPosition)
         {
             if (id != GridID)
@@ -181,6 +189,21 @@ namespace Grid
 
         #region Private Methods
         
+        private HashSet<Vector2Int> CheckForMatches()
+        {
+            HashSet<Vector2Int> gridPositionsMatched = new HashSet<Vector2Int>();
+            foreach (var gridPositionToCheck in _gridPositionsToCheck)
+            {
+                var connectedGridPosition = GridUtilities.GetChainConnectedTiles(Grid, gridPositionToCheck);
+                if (connectedGridPosition.Count >= GameManager.Instance.MinNumberOfTilesToMatch)
+                {
+                    gridPositionsMatched.UnionWith(connectedGridPosition);
+                }
+            }
+
+            return gridPositionsMatched;
+        }
+
         private bool TryAddTileToGrid(Vector2Int gridPosition, Tile tile)
         {
             if (!Grid.TryGetValue(gridPosition, out GridUtilities.CellInfo cell) || cell.Tile != null)
@@ -240,21 +263,21 @@ namespace Grid
             {
                 TileData tileData1 = GetRandomWeightedTileData();
                 Vector2 tilePosition1 = _waitingPairSpawnPoints[_waitingPairs.Count].position;
-                Tile tile1 = SpawnTile(tileData1, tilePosition1, null);
+                Tile tile1 = SpawnTile(tileData1, tilePosition1, null, this.transform);
 
                 TileData tileData2 = GetRandomWeightedTileData();
                 Vector2 tilePosition2 = tilePosition1 + new Vector2(0, _gridSetupData.BlockDimensions.y);
-                Tile tile2 = SpawnTile(tileData2, tilePosition2, tile1);
+                Tile tile2 = SpawnTile(tileData2, tilePosition2, tile1, tile1.transform);
 
                 (Tile,Tile) newPair = new (tile1, tile2);
                 _waitingPairs.Add(newPair);
             }
         }
 
-        private Tile SpawnTile(TileData tileData, Vector2 worldPosition, Tile rootPair)
+        private Tile SpawnTile(TileData tileData, Vector2 worldPosition, Tile rootPair, Transform parent)
         {
             GameObject spawnedTileObject =
-                Instantiate(_gridSetupData.TilePrefab, worldPosition, Quaternion.identity, this.transform);
+                Instantiate(_gridSetupData.TilePrefab, worldPosition, Quaternion.identity, parent);
             spawnedTileObject.TryGetComponent(out Tile tile);
             Assert.IsNotNull(tile, "Tile's prefab missing Tile script component");
             tile.InitializeTile(this, tileData, rootPair);

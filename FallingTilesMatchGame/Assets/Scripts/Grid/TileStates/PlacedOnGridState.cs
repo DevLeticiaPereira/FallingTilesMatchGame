@@ -60,8 +60,8 @@ namespace Grid.TileStates
                 
                 if (gridChangedReason == GridUtilities.GridChangedReason.TileFell)
                 {
-                    TileOwner.SetTemporaryGridPosition(_gridPosition, false);
-                    TileOwner.TileStateMachine.ChangeState(TileOwner.FallingTileState);
+                    TileOwner.SetTemporaryGridPosition(_gridPosition);
+                    TileOwner.TileStateMachine.ChangeState(TileOwner.FallingRootTileState);
                     return;
                 }
             }

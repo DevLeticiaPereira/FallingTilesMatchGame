@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Grid.TileStates;
 
@@ -16,6 +17,8 @@ namespace Grid
         public Vector2Int? GridPosition { get; private set; }
         public Vector2Int? TemporaryGridPosition { get; private set; }
         public bool IsRoot { get; private set; }
+        
+        public Tile BeginPairTile { get; private set; }
         #endregion
 
         #region Private Variable
@@ -28,7 +31,8 @@ namespace Grid
         public StateMachine<TileState> TileStateMachine { get; private set; }
 
         public WaitingState WaitingTileState { get; private set; }
-        public FallingState FallingTileState { get; private set; }
+        public FallingRootState FallingRootTileState { get; private set; }
+        public FallingChildState FallingTileChildState { get; private set; }
         public PlacedOnGridState PlacedOnGridTileState { get; private set; }
         public GameOverTileState GridGameOverTileState { get; private set; }
         public MatchedState MatchedTileState { get; private set; }
@@ -51,29 +55,38 @@ namespace Grid
         #endregion
 
         #region Initialize and Destroy
-        public void InitializeTile(GridManager gridManager, TileData tileData, Tile BeginPair)
+        public void InitializeTile(GridManager gridManager, TileData tileData, Vector2Int initialGridPosition, bool isRoot)
         {
             //this.OwnerGridID = gridManager.GridID;
             this.Data = tileData;
-            this.IsRoot = BeginPair == null;
+            this.IsRoot = isRoot;
             this._gridManager = gridManager;
             _tileSpriteRenderer.sprite = tileData.DefaultSprite;
+            SetTemporaryGridPosition(initialGridPosition);
 
             TileStateMachine = new StateMachine<TileState>();
 
-            WaitingTileState = new WaitingState(this, TileStateMachine, _gridManager.GridID);
-            FallingTileState = new FallingState(this, TileStateMachine, _gridManager);
+            WaitingTileState = new WaitingState(this, TileStateMachine, _gridManager);
+            FallingRootTileState = new FallingRootState(this, TileStateMachine, _gridManager);
+            FallingTileChildState = new FallingChildState(this, TileStateMachine, _gridManager);
             PlacedOnGridTileState = new PlacedOnGridState(this, TileStateMachine, gridManager);
             MatchedTileState = new MatchedState(this, TileStateMachine);
             GridGameOverTileState = new GameOverTileState(this, TileStateMachine, gridManager);
 
             TileStateMachine.Initialize(WaitingTileState);
         }
+        
+        public void SetBeginPair(Tile tile)
+        {
+            BeginPairTile = tile;
+        }
+
         public void Destroy()
         {
             EventManager.InvokeEventTileDestroyed(_gridManager.GridID);
             Destroy(this.gameObject);
         }
+
         #endregion
         
         #region EventsCallback
@@ -91,18 +104,37 @@ namespace Grid
         public void SetGridPosition(Vector2Int gridPosition)
         {
             GridPosition = gridPosition;
-            TemporaryGridPosition = null;
             if(GridPosition.HasValue)
                 transform.position = Utilities.GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, GridPosition.Value);
             TileStateMachine.ChangeState(PlacedOnGridTileState);
         }
-        public void SetTemporaryGridPosition(Vector2Int gridPosition, bool updateWorldPosition)
+        public void SetTemporaryGridPosition(Vector2Int gridPosition)
         {
             TemporaryGridPosition = gridPosition;
             GridPosition = null;
-            if(TemporaryGridPosition.HasValue && updateWorldPosition)
-                transform.position = Utilities.GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, TemporaryGridPosition.Value);
         }
+
+        public void StartToMoveHorizontal(float moveDuration, float targetHorizontalPosition)
+        {
+            StartCoroutine(MoveToHorizontal(moveDuration, targetHorizontalPosition));
+        }
+        
+        IEnumerator MoveToHorizontal(float moveDuration, float targetHorizontalPosition)
+        {
+            Vector3 initialPosition = transform.position;
+            float elapsedTime = 0;
+
+            while (elapsedTime < moveDuration)
+            {
+               float t = elapsedTime / moveDuration;
+               var target = new Vector3(targetHorizontalPosition, transform.position.y, 0);
+               transform.position = Vector3.Lerp(initialPosition, target, t);
+               elapsedTime += Time.deltaTime;
+               yield return null;
+            }
+            transform.position =  new Vector3(targetHorizontalPosition, transform.position.y, 0);
+        }
+        
         #endregion
         
         #region Sprites and Animations

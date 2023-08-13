@@ -26,11 +26,11 @@ public abstract class Singleton<T> : MonoBehaviour where T : class
 		if (singletonInstance == null)
 		{
 			singletonInstance = this as T;
-			DontDestroyOnLoad(gameObject);
+			DontDestroyOnLoad(this.gameObject);
 		}
 		else
 		{
-			Destroy(gameObject);
+			Destroy(this.gameObject);
 		}
     }
 }

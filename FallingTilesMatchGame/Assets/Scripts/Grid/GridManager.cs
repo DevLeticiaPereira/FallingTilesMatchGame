@@ -27,6 +27,7 @@ namespace Grid
         #region Properties
 
         public Guid GridID { get; private set; }
+        public GridSetupData GridInfo => _gridSetupData;
 
         //dictionary that links grid position to each cell info
         public Dictionary<Vector2Int, GridUtilities.CellInfo> Grid { get; private set; } =
@@ -87,8 +88,8 @@ namespace Grid
             GameManager.Instance.SignUpGridToGame(GridID, _isAiControlled);
             LoadTilesSpawnProbability();
             Grid = GridUtilities.GenerateGridCells(this.transform.position, _gridSetupData);
-            UpdateGridWaitingPairs();
             SetupStartPosition();
+            UpdateGridWaitingPairs();
         }
 
         #endregion
@@ -237,10 +238,9 @@ namespace Grid
 
             _numberOfFallingTiles += 2;
             
-            var tileToMoveInfo =  new Dictionary<Tile, Vector2Int>
+            var tileToMoveInfo =  new HashSet<Tile>
             {
-                [tile1] = _startGridPositionTile1,
-                [tile2] = _startGridPositionTile2
+                tile1, tile2
             };
             
             EventManager.InvokePlacedTileAtGridPosition(GridID, tileToMoveInfo);
@@ -263,24 +263,27 @@ namespace Grid
             {
                 TileData tileData1 = GetRandomWeightedTileData();
                 Vector2 tilePosition1 = _waitingPairSpawnPoints[_waitingPairs.Count].position;
-                Tile tile1 = SpawnTile(tileData1, tilePosition1, null, this.transform);
+                Tile tile1 = SpawnTile(tileData1, tilePosition1, true, _startGridPositionTile1, this.transform);
 
                 TileData tileData2 = GetRandomWeightedTileData();
                 Vector2 tilePosition2 = tilePosition1 + new Vector2(0, _gridSetupData.BlockDimensions.y);
-                Tile tile2 = SpawnTile(tileData2, tilePosition2, tile1, tile1.transform);
+                Tile tile2 = SpawnTile(tileData2, tilePosition2, false, _startGridPositionTile2, tile1.transform);
 
+                tile1.SetBeginPair(tile2);
+                tile2.SetBeginPair(tile1);
+                
                 (Tile,Tile) newPair = new (tile1, tile2);
                 _waitingPairs.Add(newPair);
             }
         }
 
-        private Tile SpawnTile(TileData tileData, Vector2 worldPosition, Tile rootPair, Transform parent)
+        private Tile SpawnTile(TileData tileData, Vector2 worldPosition, bool isRoot, Vector2Int initialGridPosition, Transform parent)
         {
             GameObject spawnedTileObject =
                 Instantiate(_gridSetupData.TilePrefab, worldPosition, Quaternion.identity, parent);
             spawnedTileObject.TryGetComponent(out Tile tile);
             Assert.IsNotNull(tile, "Tile's prefab missing Tile script component");
-            tile.InitializeTile(this, tileData, rootPair);
+            tile.InitializeTile(this, tileData, initialGridPosition, isRoot);
             spawnedTileObject.name = $"Tile {tileData.ColorTile}";
             return tile;
         }

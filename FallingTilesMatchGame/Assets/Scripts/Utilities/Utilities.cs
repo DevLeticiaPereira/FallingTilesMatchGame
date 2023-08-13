@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
 using Grid;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace Utilities

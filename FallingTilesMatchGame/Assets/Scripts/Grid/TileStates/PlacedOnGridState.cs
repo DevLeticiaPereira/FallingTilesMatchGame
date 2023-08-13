@@ -21,7 +21,6 @@ namespace Grid.TileStates
         private Dictionary<Vector2Int, TileData.TileConnections> _neighborConnectionMap = new Dictionary<Vector2Int, TileData.TileConnections>();
         
         private readonly GridManager _gridManager;
-        private Vector2Int _gridPosition;
         private bool _waitingToFall = false;
 
         public PlacedOnGridState(Tile tileOwner, StateMachine<TileState> tileStateMachine, GridManager gridManager) : base(tileOwner, tileStateMachine)
@@ -32,64 +31,64 @@ namespace Grid.TileStates
         public override void Enter()
         {
             base.Enter();
-            EventManager.EventGridHasChanged += OnEventGridChanged;
+            EventManager.EventUpdateTilesWithGridChanges += OnEventUpdateTilesWithGridChanged;
             if (!TileOwner.GridPosition.HasValue)
             {
                 return;
             }
-            _gridPosition = TileOwner.GridPosition.Value;
-            _neighborConnectionMap = GetNeighborGridPositions(_gridPosition);
+            _neighborConnectionMap = GetNeighborGridPositions(TileOwner.GridPosition.Value);
         }
         
-        private void OnEventGridChanged(Guid gridID, HashSet<Vector2Int> gridPositionsChanged, GridUtilities.GridChangedReason gridChangedReason)
+        private void OnEventUpdateTilesWithGridChanged(Guid gridID, HashSet<Vector2Int> gridPositionsChanged, GridUtilities.GridChangedReason gridChangedReason)
         {
             if (gridID != _gridManager.GridID)
             {
                 return;
             }
             
-            // if tile's position changed and grids position is now empty, change state to matched
-            if (gridPositionsChanged.Contains(_gridPosition) && GridUtilities.IsGridPositionAvailable(_gridManager.Grid, _gridPosition))
+            if (gridPositionsChanged.Contains(TileOwner.GridPosition.Value) && gridChangedReason == GridUtilities.GridChangedReason.TileDropped)
             {
-                //matched tile is the one listening, hes was remove, so hell move to matched state
-                if (gridChangedReason == GridUtilities.GridChangedReason.TileMatched)
-                {
-                    TileOwner.TileStateMachine.ChangeState(TileOwner.MatchedTileState);
-                    return;
-                }
-                
-                if (gridChangedReason == GridUtilities.GridChangedReason.TileFell)
-                {
-                    TileOwner.SetTemporaryGridPosition(_gridPosition);
-                    TileOwner.TileStateMachine.ChangeState(TileOwner.FallingRootTileState);
-                    return;
-                }
+                TileOwner.StartToMoveGridPosition(5.0f);
+                return;
+            }
+            
+            // if tile's position changed and grids position is now empty, change state to matched
+            if (gridPositionsChanged.Contains(TileOwner.GridPosition.Value) && gridChangedReason == GridUtilities.GridChangedReason.TileMatched)
+            {
+                TileOwner.TileStateMachine.ChangeState(TileOwner.MatchedTileState);
+                return;
+            }
+            
+            if (gridPositionsChanged.Contains(TileOwner.GridPosition.Value) && gridChangedReason == GridUtilities.GridChangedReason.TileAdded)
+            {
+                Connections = GetTileConnections();
+                TileOwner.UpdateTileSpriteWithConnections(Connections);
+                return;
             }
             
             //if any of the changed position is one of neighbors positions update connections and sprites
             //check for down tile
             foreach (var gridPositionChanged in gridPositionsChanged)
             {
-                if (_neighborConnectionMap.ContainsKey(gridPositionChanged) || gridPositionChanged != _gridPosition)
+                if (_neighborConnectionMap.ContainsKey(gridPositionChanged))
                 {
                     Connections = GetTileConnections();
                     TileOwner.UpdateTileSpriteWithConnections(Connections);
                     CheckForDownTile();
-                    break;
+                    return;
                 }
             }
         }
 
         private bool CheckForDownTile()
         {
-            Vector2Int downTile = new Vector2Int(_gridPosition.x, _gridPosition.y - 1);
+            Vector2Int downTile = new Vector2Int(TileOwner.GridPosition.Value.x, TileOwner.GridPosition.Value.y - 1);
             if (!GridUtilities.IsGridPositionAvailable(_gridManager.Grid, downTile))
             {
                 return false;
             }
-
-            _waitingToFall = true;
-            EventManager.InvokeEventTileShouldFallFromPosition(_gridManager.GridID, _gridPosition);
+            
+            EventManager.InvokeEventTileShouldFallFromPosition(_gridManager.GridID, TileOwner.GridPosition.Value);
             return true;
         }
 
@@ -146,7 +145,7 @@ namespace Grid.TileStates
         public override void Exit()
         {
             base.Exit();
-            EventManager.EventGridHasChanged -= OnEventGridChanged;
+            EventManager.EventUpdateTilesWithGridChanges -= OnEventUpdateTilesWithGridChanged;
         }
     }
 }

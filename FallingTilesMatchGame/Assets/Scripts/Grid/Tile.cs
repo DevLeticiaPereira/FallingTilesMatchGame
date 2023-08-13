@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Grid.TileStates;
+using Utilities;
 
 namespace Grid
 {
@@ -33,6 +34,7 @@ namespace Grid
         public WaitingState WaitingTileState { get; private set; }
         public FallingRootState FallingRootTileState { get; private set; }
         public FallingChildState FallingTileChildState { get; private set; }
+        public FallingState FallingTileState { get; private set; }
         public PlacedOnGridState PlacedOnGridTileState { get; private set; }
         public GameOverTileState GridGameOverTileState { get; private set; }
         public MatchedState MatchedTileState { get; private set; }
@@ -69,6 +71,7 @@ namespace Grid
             WaitingTileState = new WaitingState(this, TileStateMachine, _gridManager);
             FallingRootTileState = new FallingRootState(this, TileStateMachine, _gridManager);
             FallingTileChildState = new FallingChildState(this, TileStateMachine, _gridManager);
+            FallingTileState = new FallingState(this, TileStateMachine, _gridManager);
             PlacedOnGridTileState = new PlacedOnGridState(this, TileStateMachine, gridManager);
             MatchedTileState = new MatchedState(this, TileStateMachine);
             GridGameOverTileState = new GameOverTileState(this, TileStateMachine, gridManager);
@@ -119,7 +122,12 @@ namespace Grid
             StartCoroutine(MoveToHorizontal(moveDuration, targetHorizontalPosition));
         }
         
-        IEnumerator MoveToHorizontal(float moveDuration, float targetHorizontalPosition)
+        public void StartToMoveGridPosition(float moveDuration)
+        {
+            StartCoroutine(DropTile(moveDuration));
+        }
+        
+        private IEnumerator MoveToHorizontal(float moveDuration, float targetHorizontalPosition)
         {
             Vector3 initialPosition = transform.position;
             float elapsedTime = 0;
@@ -133,6 +141,25 @@ namespace Grid
                yield return null;
             }
             transform.position =  new Vector3(targetHorizontalPosition, transform.position.y, 0);
+        }
+        
+        private IEnumerator DropTile(float moveDuration)
+        {
+            Vector3 initialPosition = transform.position;
+            float elapsedTime = 0;
+
+            var targetPosition =
+                GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, GridPosition.Value);
+
+            while (elapsedTime < moveDuration)
+            {
+                float t = elapsedTime / moveDuration;
+                transform.position = Vector3.Lerp(initialPosition, targetPosition, t);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+            transform.position =  targetPosition;
+            EventManager.InvokeDroppedTileReachedGrid(_gridManager.GridID, GridPosition.Value, this);
         }
         
         #endregion

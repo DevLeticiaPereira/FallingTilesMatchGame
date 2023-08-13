@@ -12,7 +12,7 @@ namespace Grid.TileStates
         private Vector2 _inicialWorldPosition;
         
         //todo add to inspector, to we can set it up
-        private readonly float _defaultFallSpeed = 1.0f;
+        private readonly float _defaultFallSpeed = 3.0f;
         private readonly float _boostedFallSpeed = 4.0f;
         private readonly float _horizontalMoveSpeed = 8.0f;
         private readonly float _rotateMoveSpeed = 8.0f;
@@ -23,6 +23,7 @@ namespace Grid.TileStates
         private Tile _beginPair;
         private bool _isRotating;
         private Vector2 _gridCellDimensions;
+        private bool _tileReachedGrid = false;
 
         public FallingRootState(Tile tileOwner, StateMachine<TileState> tileStateMachine, GridManager gridManager/*, Tile beginPair*/) : base(tileOwner,
             tileStateMachine)
@@ -35,24 +36,41 @@ namespace Grid.TileStates
         public override void Enter()
         {
             base.Enter();
-            _beginPair = TileOwner.BeginPairTile;
-            TileOwner.SetFallingRootSprite();
-            _currentFallSpeed = _defaultFallSpeed;
             if (!_isAiControlled)
             {
                 InputManager.MoveHorizontal += MoveHorizontal;
             }
+            
+            EventManager.EventTileReachedGrid += TileReachedGrid;
+            _beginPair = TileOwner.BeginPairTile;
+            TileOwner.SetFallingRootSprite();
+            _currentFallSpeed = _defaultFallSpeed;
             _gridCellDimensions = _gridManager.GridInfo.BlockDimensions;
             
             UpdateGridTarget();
         }
 
+        private void TileReachedGrid(Guid gridId, Vector2Int gridPosition, Tile tile)
+        {
+            if (gridId != _gridManager.GridID)
+            {
+                return;
+            }
+
+            if (tile == _beginPair && !_tileReachedGrid)
+            {
+                TileOwner.TileStateMachine.ChangeState(TileOwner.FallingTileState);
+            }
+        }
+
         public override void Exit()
         {
+            base.Exit();
             if (!_isAiControlled)
             {
                 InputManager.MoveHorizontal -= MoveHorizontal;
             }
+            EventManager.EventTileReachedGrid -= TileReachedGrid;
         }
         
         public override void Update()
@@ -63,34 +81,49 @@ namespace Grid.TileStates
             }
 
             base.Update();
+            
+            if (Vector2.Distance(TileOwner.transform.position, _targetWorldPosition) < 0.05)
+            {
+                HandleTileReachedGrid();
+                return;
+            }
 
+            if (TryUpdateTileTemporaryGridPosition())
+            {
+                UpdateGridTarget();
+            }
+            
+            //Vector2 movementDirection = (_targetWorldPosition - (Vector2)TileOwner.transform.position).normalized;
+            float stepY = _currentFallSpeed * Time.deltaTime /** movementDirection.y*/;
+            TileOwner.transform.position -= new Vector3(0, stepY, 0f);
+        }
+        
+        private void HandleTileReachedGrid()
+        {
+            _tileReachedGrid = true;
+            TileOwner.transform.SetParent(_gridManager.transform);
+            TileOwner.transform.position = _targetWorldPosition;
+            EventManager.InvokeTileReachedGrid(_gridManager.GridID, TileOwner.TemporaryGridPosition.Value, TileOwner);
+        }
+
+        private bool TryUpdateTileTemporaryGridPosition()
+        {
             var currentGridPositionY = Mathf.CeilToInt(TileOwner.transform.position.y / _gridCellDimensions.y);
             var currentGridPositionX = Mathf.CeilToInt(TileOwner.transform.position.x / _gridCellDimensions.x);
             var newTemporaryGridPosition = new Vector2Int(currentGridPositionX, currentGridPositionY);
             if (newTemporaryGridPosition != TileOwner.TemporaryGridPosition.Value)
             {
                 TileOwner.SetTemporaryGridPosition(newTemporaryGridPosition);
-                UpdateGridTarget();
+                return true;
             }
-
-            if (Vector2.Distance(TileOwner.transform.position, _targetWorldPosition) > 0.05)
-            {
-                Vector2 movementDirection = (_targetWorldPosition - (Vector2)TileOwner.transform.position).normalized;
-                float stepY = _currentFallSpeed * Time.deltaTime * movementDirection.y;
-                TileOwner.transform.position += new Vector3(0, stepY, 0f);
-                return;
-            }
-            
-            TileOwner.transform.SetParent(_gridManager.transform);
-            TileOwner.transform.position = _targetWorldPosition;
-            EventManager.InvokeTileReachedGrid(_gridManager.GridID, TileOwner.TemporaryGridPosition.Value, TileOwner);
+            return false;
         }
-        
-        public void UpdateGridTarget()
+
+        private void UpdateGridTarget()
         {
             bool foundValidPos = false;
             Vector2Int firstAvailablePosition = new Vector2Int(); 
-            for (int i = 0; i < TileOwner.TemporaryGridPosition.Value.y; ++i)
+            for (int i = 0; i <= TileOwner.TemporaryGridPosition.Value.y; ++i)
             {
                 var positionToCheck = new Vector2Int(TileOwner.TemporaryGridPosition.Value.x, i);
                 if (GridUtilities.IsGridPositionAvailable(_gridManager.Grid, positionToCheck))

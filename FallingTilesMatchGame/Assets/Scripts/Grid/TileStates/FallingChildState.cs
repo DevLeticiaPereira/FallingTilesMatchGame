@@ -1,6 +1,6 @@
+using System;
 using Grid;
 using Grid.TileStates;
-using Unity.VisualScripting;
 using UnityEngine;
 using Utilities;
 
@@ -20,6 +20,7 @@ public class FallingChildState : TileState
     private GridManager _gridManager;
     private Tile _beginPair;
     private bool _isRotating;
+    private bool _tileReachedGrid = false;
     public TileData.TileConnections _currentPositionRelatedToTileRoot = TileData.TileConnections.Up;
     
     public FallingChildState(Tile tileOwner, StateMachine<TileState> tileStateMachine, GridManager gridManager) : base(tileOwner, tileStateMachine)
@@ -43,7 +44,30 @@ public class FallingChildState : TileState
         {
             InputManager.Rotate += Rotate;
         }
+        EventManager.EventTileReachedGrid += TileReachedGrid;
         UpdateGridTarget();
+    }
+    
+    public override void Exit()
+    {
+        base.Exit();
+        if (!_isAiControlled)
+        {
+            InputManager.Rotate -= Rotate;
+        }
+        EventManager.EventTileReachedGrid -= TileReachedGrid;
+    }
+    private void TileReachedGrid(Guid gridId, Vector2Int gridPosition, Tile tile)
+    {
+        if (gridId != _gridManager.GridID)
+        {
+            return;
+        }
+
+        if (tile == _beginPair&& !_tileReachedGrid)
+        {
+            TileOwner.TileStateMachine.ChangeState(TileOwner.FallingTileState);
+        }
     }
     
     public override void Update()
@@ -55,26 +79,40 @@ public class FallingChildState : TileState
 
         base.Update();
 
+        if (Vector2.Distance(TileOwner.transform.position, _targetWorldPosition) < 0.05)
+        {
+            HandleTileReachedGrid();
+            return;
+        }
+        
+        if (TryUpdateTileTemporaryGridPosition())
+        {
+            UpdateGridTarget();
+        }
+        
+    }
+
+    private void HandleTileReachedGrid()
+    {
+        _tileReachedGrid = true;
+        TileOwner.transform.SetParent(_gridManager.transform);
+        TileOwner.transform.position = _targetWorldPosition;
+        EventManager.InvokeTileReachedGrid(_gridManager.GridID, TileOwner.TemporaryGridPosition.Value, TileOwner);
+    }
+
+    private bool TryUpdateTileTemporaryGridPosition()
+    {
         var currentGridPositionY = Mathf.CeilToInt(TileOwner.transform.position.y / _gridCellDimensions.y);
         var currentGridPositionX = Mathf.CeilToInt(TileOwner.transform.position.x / _gridCellDimensions.x);
         var newTemporaryGridPosition = new Vector2Int(currentGridPositionX, currentGridPositionY);
         if (newTemporaryGridPosition != TileOwner.TemporaryGridPosition.Value)
         {
-            //Debug.Log($"Reached grid position {currentGridPositionX} : {currentGridPositionY} is root {TileOwner.IsRoot}");
             TileOwner.SetTemporaryGridPosition(newTemporaryGridPosition);
-            UpdateGridTarget();
+            return true;
         }
-
-        if (Vector2.Distance(TileOwner.transform.position, _targetWorldPosition) > 0.05)
-        {
-            return;
-        }
-        
-        TileOwner.transform.SetParent(_gridManager.transform);
-        TileOwner.transform.position = _targetWorldPosition;
-        EventManager.InvokeTileReachedGrid(_gridManager.GridID, TileOwner.TemporaryGridPosition.Value, TileOwner);
+        return false;
     }
-    
+
     private void Rotate()
     {
         var nextRotationDirection = GetNexRotateDirection();
@@ -109,11 +147,11 @@ public class FallingChildState : TileState
         TileOwner.transform.localPosition = nextRotatePosition;
     }
 
-    public void UpdateGridTarget()
+    private void UpdateGridTarget()
     {
         bool foundValidPos = false;
         Vector2Int firstAvailablePosition = new Vector2Int(); 
-        for (int i = 0; i < TileOwner.TemporaryGridPosition.Value.y; ++i)
+        for (int i = 0; i <= TileOwner.TemporaryGridPosition.Value.y; ++i)
         {
             var positionToCheck = new Vector2Int(TileOwner.TemporaryGridPosition.Value.x, i);
             if (GridUtilities.IsGridPositionAvailable(_gridManager.Grid, positionToCheck))
@@ -156,9 +194,4 @@ public class FallingChildState : TileState
         return TileData.TileConnections.None;
     }
     
-    public override void Exit()
-    {
-        base.Exit();
-        InputManager.Rotate -= Rotate;
-    }
 }

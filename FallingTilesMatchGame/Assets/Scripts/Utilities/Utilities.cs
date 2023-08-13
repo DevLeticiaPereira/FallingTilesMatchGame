@@ -35,7 +35,7 @@ namespace Utilities
             None,
             TileAdded,
             TileMatched,
-            TileFell
+            TileDropped
         }
         
         public static Vector2Int GetAdjacentGridPosition(Vector2Int gridPosition, TileData.TileConnections direction)

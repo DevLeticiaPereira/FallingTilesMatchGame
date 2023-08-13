@@ -12,7 +12,6 @@ namespace Grid.TileStates
         /// Setup when grid has changes at the tile position or on its neighbors
         /// </summary>
         public TileData.TileConnections Connections { get; private set; }
-        
         /// <summary>
         /// Neighbor grid positions and its connection direction
         /// Color are no considered
@@ -31,53 +30,96 @@ namespace Grid.TileStates
         public override void Enter()
         {
             base.Enter();
-            EventManager.EventUpdateTilesWithGridChanges += OnEventUpdateTilesWithGridChanged;
+            EventManager.EventTilesDroppedFromGrid += OnDroppedFromGrid;
+            EventManager.EventTilesMatched += OnTilesMatched;
+            EventManager.EventTilesAddedToGrid += OnTilesAddedToGrid;
             if (!TileOwner.GridPosition.HasValue)
             {
                 return;
             }
             _neighborConnectionMap = GetNeighborGridPositions(TileOwner.GridPosition.Value);
         }
-        
-        private void OnEventUpdateTilesWithGridChanged(Guid gridID, HashSet<Vector2Int> gridPositionsChanged, GridUtilities.GridChangedReason gridChangedReason)
+
+        private void OnTilesAddedToGrid(Guid gridId, HashSet<Vector2Int> changedPositions)
         {
-            if (gridID != _gridManager.GridID)
+            if (gridId != _gridManager.GridID)
             {
                 return;
             }
             
-            if (gridPositionsChanged.Contains(TileOwner.GridPosition.Value) && gridChangedReason == GridUtilities.GridChangedReason.TileDropped)
+            if (HasNeighborChanged(changedPositions) || changedPositions.Contains(TileOwner.GridPosition.Value))
             {
-                TileOwner.StartToMoveGridPosition(5.0f);
+                Connections = GetTileConnections();
+                TileOwner.UpdateTileSpriteWithConnections(Connections);
+            }
+        }
+
+        private void OnTilesMatched(Guid gridId, HashSet<Vector2Int> changedPositions)
+        {
+            if (gridId != _gridManager.GridID)
+            {
                 return;
             }
-            
-            // if tile's position changed and grids position is now empty, change state to matched
-            if (gridPositionsChanged.Contains(TileOwner.GridPosition.Value) && gridChangedReason == GridUtilities.GridChangedReason.TileMatched)
+            if (changedPositions.Contains(TileOwner.GridPosition.Value))
             {
                 TileOwner.TileStateMachine.ChangeState(TileOwner.MatchedTileState);
                 return;
             }
-            
-            if (gridPositionsChanged.Contains(TileOwner.GridPosition.Value) && gridChangedReason == GridUtilities.GridChangedReason.TileAdded)
+
+            if (HasNeighborChanged(changedPositions))
             {
                 Connections = GetTileConnections();
                 TileOwner.UpdateTileSpriteWithConnections(Connections);
+                CheckForDownTile();
+            }
+        }
+
+        private void OnDroppedFromGrid(Guid gridId, Dictionary<Vector2Int, Vector2Int> positionsChangedMap)
+        {
+            if (gridId != _gridManager.GridID)
+            {
                 return;
             }
             
-            //if any of the changed position is one of neighbors positions update connections and sprites
-            //check for down tile
-            foreach (var gridPositionChanged in gridPositionsChanged)
+            if (positionsChangedMap.ContainsKey(TileOwner.GridPosition.Value))
             {
-                if (_neighborConnectionMap.ContainsKey(gridPositionChanged))
+                TileOwner.SetDefaultSprite();
+                _neighborConnectionMap = GetNeighborGridPositions(positionsChangedMap[TileOwner.GridPosition.Value]);
+                TileOwner.StartToMoveGridPosition(0.5f, positionsChangedMap[TileOwner.GridPosition.Value]);
+                return;
+            }
+
+            if (HasNeighborChanged(positionsChangedMap, /*check for key*/ true))
+            {
+                Connections = GetTileConnections();
+                TileOwner.UpdateTileSpriteWithConnections(Connections);
+                CheckForDownTile();
+            }
+        }
+        
+        private bool HasNeighborChanged(HashSet<Vector2Int> changedGridPositions)
+        {
+            foreach (var position in changedGridPositions)
+            {
+                if (_neighborConnectionMap.ContainsKey(position))
                 {
-                    Connections = GetTileConnections();
-                    TileOwner.UpdateTileSpriteWithConnections(Connections);
-                    CheckForDownTile();
-                    return;
+                    return true;
                 }
             }
+            return false;
+        }
+        
+        private bool HasNeighborChanged(Dictionary<Vector2Int,Vector2Int> changedGridPositions, bool checkForKey)
+        {
+            foreach (var position in changedGridPositions)
+            {
+                var positionToCheck = checkForKey ? position.Key : position.Value;
+                if (_neighborConnectionMap.ContainsKey(positionToCheck))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private bool CheckForDownTile()
@@ -145,7 +187,9 @@ namespace Grid.TileStates
         public override void Exit()
         {
             base.Exit();
-            EventManager.EventUpdateTilesWithGridChanges -= OnEventUpdateTilesWithGridChanged;
+            EventManager.EventTilesDroppedFromGrid -= OnDroppedFromGrid;
+            EventManager.EventTilesMatched -= OnTilesMatched;
+            EventManager.EventTilesAddedToGrid -= OnTilesAddedToGrid;
         }
     }
 }

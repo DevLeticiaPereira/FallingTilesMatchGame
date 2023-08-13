@@ -12,7 +12,7 @@ namespace Grid.TileStates
         private Vector2 _inicialWorldPosition;
         
         //todo add to inspector, to we can set it up
-        private readonly float _defaultFallSpeed = 3.0f;
+        private readonly float _defaultFallSpeed = 2.0f;
         private readonly float _boostedFallSpeed = 4.0f;
         private readonly float _horizontalMoveSpeed = 8.0f;
         private readonly float _rotateMoveSpeed = 8.0f;
@@ -93,7 +93,6 @@ namespace Grid.TileStates
                 UpdateGridTarget();
             }
             
-            //Vector2 movementDirection = (_targetWorldPosition - (Vector2)TileOwner.transform.position).normalized;
             float stepY = _currentFallSpeed * Time.deltaTime /** movementDirection.y*/;
             TileOwner.transform.position -= new Vector3(0, stepY, 0f);
         }
@@ -166,13 +165,13 @@ namespace Grid.TileStates
             }
             
             _targetWorldPosition = GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, newTargetGridPosition);
-            TileOwner.StartToMoveHorizontal(0.5f, _targetWorldPosition.x);
+            TileOwner.StartToMoveHorizontal(0.1f, _targetWorldPosition.x);
         }
 
         private Vector2Int GetNextPossibleHorizontalGridPosition(InputManager.DragHorizontalDirection dragHorizontalDirection, Vector2Int gridPosition)
         {
             Vector2Int newTargetGridPosition = gridPosition;
-
+            --newTargetGridPosition.y;
             switch (dragHorizontalDirection)
             {
                 case InputManager.DragHorizontalDirection.Left:

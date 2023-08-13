@@ -8,7 +8,9 @@ public static class EventManager
     public static event Action<Guid, Vector2Int, Tile> EventTileReachedGrid;
     public static event Action<Guid, Vector2Int, Tile> EventDroppedTileReachedGrid;
     public static event Action<Guid, HashSet<Tile>> EventPlacedTileAtGridPosition;
-    public static event Action<Guid, HashSet<Vector2Int>, Utilities.GridUtilities.GridChangedReason> EventUpdateTilesWithGridChanges;
+    public static event Action<Guid, HashSet<Vector2Int>> EventTilesAddedToGrid;
+    public static event Action<Guid, Dictionary<Vector2Int, Vector2Int>> EventTilesDroppedFromGrid;
+    public static event Action<Guid, HashSet<Vector2Int>> EventTilesMatched;
     public static event Action<Guid> EventGridGameOver;
     public static event Action<Guid> EventTileDestroyed;
     public static event Action<Guid, Vector2Int> EventShouldFallFromPosition;
@@ -30,10 +32,19 @@ public static class EventManager
         EventPlacedTileAtGridPosition?.Invoke(gridID, tilesMoved);
     }
 
-    public static void InvokeUpdateTilesWithGridChanges(Guid gridID, HashSet<Vector2Int> gridPosition,
-        Utilities.GridUtilities.GridChangedReason gridChangedReason)
+    public static void InvokeTilesMatched(Guid gridID, HashSet<Vector2Int> gridPositions)
     {
-        EventUpdateTilesWithGridChanges?.Invoke(gridID, gridPosition, gridChangedReason);
+        EventTilesMatched?.Invoke(gridID, gridPositions);
+    }
+    
+    public static void InvokeTilesDroppedFromGrid(Guid gridID, Dictionary<Vector2Int, Vector2Int> gridPositions)
+    {
+        EventTilesDroppedFromGrid?.Invoke(gridID, gridPositions);
+    }
+    
+    public static void InvokeTilesAddedToGrid(Guid gridID, HashSet<Vector2Int> gridPositions)
+    {
+        EventTilesAddedToGrid?.Invoke(gridID, gridPositions);
     }
 
     public static void InvokeGridGameOver(Guid gridID)

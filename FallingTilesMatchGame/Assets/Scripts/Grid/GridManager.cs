@@ -48,7 +48,7 @@ namespace Grid
         private int _tileOnMatchingState = 0;
         private int _numberOfTilesDropping = 0;
         private HashSet<Vector2Int> _gridPositionsToCheck = new HashSet<Vector2Int>();
-        private Dictionary<Vector2Int, Tile> _bufferForDroppingTiles = new Dictionary<Vector2Int, Tile>();
+        //private Dictionary<Vector2Int, Tile> _bufferForDroppingTiles = new Dictionary<Vector2Int, Tile>();
         private List<Vector2Int> _gridWaitingToDropPositions = new List<Vector2Int>();
         
         
@@ -134,8 +134,8 @@ namespace Grid
             }
             
             //WARN TILES ABOUT GRID ADDED TILES AND UPDATE ITS CONNECTIONS
-            EventManager.InvokeUpdateTilesWithGridChanges(GridID, _gridPositionsToCheck, GridUtilities.GridChangedReason.TileAdded);
-            
+            //EventManager.InvokeUpdateTilesWithGridChanges(GridID, _gridPositionsToCheck, GridUtilities.GridChangedReason.TileAdded);
+            EventManager.InvokeTilesAddedToGrid(GridID, _gridPositionsToCheck);
             //HANDLE CHECK FOR MATCH AND WARN TILES IF ANY TILE WAS REMOVED
             var gridPositionsMatched = CheckForMatches();
             foreach (var gridPositionMatched in gridPositionsMatched)
@@ -149,7 +149,8 @@ namespace Grid
             if (gridPositionsMatched.Count>0)
             {
                 _gridScoreManager.AddScoreToGrid(gridPositionsMatched.Count);
-                EventManager.InvokeUpdateTilesWithGridChanges(GridID, gridPositionsMatched, GridUtilities.GridChangedReason.TileMatched);
+                //EventManager.InvokeUpdateTilesWithGridChanges(GridID, gridPositionsMatched, GridUtilities.GridChangedReason.TileMatched);
+                EventManager.InvokeTilesMatched(GridID, gridPositionsMatched);
             }
             else
             {
@@ -164,22 +165,23 @@ namespace Grid
             {
                 return; 
             }
-
+            
+            if (!TryAddTileToGrid(gridPosition, tile))
+            {
+                return;
+            }
+            
+            tile.SetGridPosition(gridPosition);
+            _gridPositionsToCheck.Add(gridPosition);
+            
             --_numberOfTilesDropping;
             if (_numberOfTilesDropping > 0)
             {
                 return;
             }
             
-            foreach (var droppingTile in _bufferForDroppingTiles)
-            {
-                _gridPositionsToCheck.Add(droppingTile.Key);
-                TryAddTileToGrid(droppingTile.Key, droppingTile.Value);
-            }
-            _bufferForDroppingTiles.Clear();
-            
             //WARN TILES ABOUT GRID ADDED TILES AND UPDATE ITS CONNECTIONS
-            EventManager.InvokeUpdateTilesWithGridChanges(GridID, _gridPositionsToCheck, GridUtilities.GridChangedReason.TileAdded);
+            EventManager.InvokeTilesAddedToGrid(GridID, _gridPositionsToCheck);
             
             //HANDLE CHECK FOR MATCH AND WARN TILES IF ANY TILE WAS REMOVED
             var gridMatchedPositions = CheckForMatches();
@@ -194,7 +196,7 @@ namespace Grid
             if (gridMatchedPositions.Count>0)
             {
                 _gridScoreManager.AddScoreToGrid(gridMatchedPositions.Count);
-                EventManager.InvokeUpdateTilesWithGridChanges(GridID, gridMatchedPositions, GridUtilities.GridChangedReason.TileMatched);
+                EventManager.InvokeTilesMatched(GridID, gridMatchedPositions);
             }
             else
             {
@@ -228,6 +230,7 @@ namespace Grid
 
         private void ProcessTileDrop()
         {
+            var oldToNewPositionMap = new Dictionary<Vector2Int, Vector2Int>();
             foreach (var gridWaitingToDropPosition in _gridWaitingToDropPositions)
             {
                 if (!Grid.ContainsKey(gridWaitingToDropPosition))
@@ -241,7 +244,7 @@ namespace Grid
                 {
                     newPosition = new Vector2Int(gridWaitingToDropPosition.x, i);
                     if (GridUtilities.IsGridPositionAvailable(Grid, newPosition) 
-                        && !_bufferForDroppingTiles.ContainsKey(newPosition))
+                        && !oldToNewPositionMap.ContainsValue(newPosition))
                     {
                         break;
                     }
@@ -251,13 +254,12 @@ namespace Grid
                 {
                     Debug.LogError("cant find a valid place to drop tile.");
                 }
-                cell.Tile.SetGridPosition(newPosition);
-                _bufferForDroppingTiles.Add(newPosition, cell.Tile);
+                oldToNewPositionMap[gridWaitingToDropPosition] = newPosition;
                 RemoveTileFromGrid(gridWaitingToDropPosition);
             }
-            
-            _numberOfTilesDropping = _bufferForDroppingTiles.Count;
-            EventManager.InvokeUpdateTilesWithGridChanges(GridID, _gridWaitingToDropPositions.ToHashSet(), GridUtilities.GridChangedReason.TileDropped);
+            _numberOfTilesDropping = oldToNewPositionMap.Count;
+            EventManager.InvokeTilesDroppedFromGrid(GridID, oldToNewPositionMap);
+            _gridWaitingToDropPositions.Clear();
         }
 
         private void OnShouldFallFromPosition(Guid id, Vector2Int gridPosition)

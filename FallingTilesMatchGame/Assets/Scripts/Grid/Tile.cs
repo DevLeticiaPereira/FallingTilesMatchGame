@@ -107,8 +107,8 @@ namespace Grid
         public void SetGridPosition(Vector2Int gridPosition)
         {
             GridPosition = gridPosition;
-            if(GridPosition.HasValue)
-                transform.position = Utilities.GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, GridPosition.Value);
+            // if(GridPosition.HasValue)
+            //     transform.position = Utilities.GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, GridPosition.Value);
             TileStateMachine.ChangeState(PlacedOnGridTileState);
         }
         public void SetTemporaryGridPosition(Vector2Int gridPosition)
@@ -122,9 +122,9 @@ namespace Grid
             StartCoroutine(MoveToHorizontal(moveDuration, targetHorizontalPosition));
         }
         
-        public void StartToMoveGridPosition(float moveDuration)
+        public void StartToMoveGridPosition(float moveDuration, Vector2Int gridDestination)
         {
-            StartCoroutine(DropTile(moveDuration));
+            StartCoroutine(DropTile(moveDuration, gridDestination));
         }
         
         private IEnumerator MoveToHorizontal(float moveDuration, float targetHorizontalPosition)
@@ -143,13 +143,13 @@ namespace Grid
             transform.position =  new Vector3(targetHorizontalPosition, transform.position.y, 0);
         }
         
-        private IEnumerator DropTile(float moveDuration)
+        private IEnumerator DropTile(float moveDuration, Vector2Int gridDestination)
         {
             Vector3 initialPosition = transform.position;
             float elapsedTime = 0;
 
             var targetPosition =
-                GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, GridPosition.Value);
+                GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, gridDestination);
 
             while (elapsedTime < moveDuration)
             {
@@ -159,7 +159,7 @@ namespace Grid
                 yield return null;
             }
             transform.position =  targetPosition;
-            EventManager.InvokeDroppedTileReachedGrid(_gridManager.GridID, GridPosition.Value, this);
+            EventManager.InvokeDroppedTileReachedGrid(_gridManager.GridID, gridDestination, this);
         }
         
         #endregion

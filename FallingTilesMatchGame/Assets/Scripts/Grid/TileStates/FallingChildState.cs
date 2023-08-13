@@ -173,7 +173,6 @@ public class FallingChildState : TileState
         {
             firstAvailablePosition += new Vector2Int(0, 1);
         }
-        Debug.Log($"_targetWorldPosition {firstAvailablePosition} isRoot: {TileOwner.IsRoot}");
         _targetWorldPosition = GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, firstAvailablePosition);
     }
 

@@ -99,7 +99,12 @@ public static class EventManager
     #region UNSUBSCRIBE ALL FUNCTIONS
     public static void UnsubscribeAllRotate()
     {
-        var delegates = EventRotate.GetInvocationList();
+        if (EventRotate == null)
+        {
+            return;
+        }
+        
+        var delegates = EventRotate?.GetInvocationList();
         foreach (var del in delegates)
         {
             if (del is Action listener)
@@ -111,7 +116,11 @@ public static class EventManager
     
     public static void UnsubscribeAllMoveHorizontal()
     {
-        var delegates = EventMoveHorizontal.GetInvocationList();
+        if (EventMoveHorizontal == null)
+        {
+            return;
+        }
+        var delegates = EventMoveHorizontal?.GetInvocationList();
         foreach (var del in delegates)
         {
             if (del is Action<InputManager.DragHorizontalDirection> listener)

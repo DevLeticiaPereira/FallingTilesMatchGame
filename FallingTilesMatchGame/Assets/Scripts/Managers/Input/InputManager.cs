@@ -45,12 +45,6 @@ public class InputManager : Singleton<InputManager>
 		RunningGameState.OnGameStopRunning += () => {EnablePlayerInput(false);};
 	}
 
-	private void OnGameOver()
-	{
-		EventManager.UnsubscribeAllRotate();
-		EventManager.UnsubscribeAllMoveHorizontal();
-	}
-
 	private void OnDestroy()
 	{
 		EventManager.EventExitedGameplayScene -= OnExitedGameplayScene;

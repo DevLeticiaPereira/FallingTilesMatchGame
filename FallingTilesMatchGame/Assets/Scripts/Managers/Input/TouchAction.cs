@@ -44,6 +44,15 @@ public partial class @TouchAction: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Acelerate"",
+                    ""type"": ""Value"",
+                    ""id"": ""602d686d-2830-4dc6-807a-3535095839d4"",
+                    ""expectedControlType"": ""Axis"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -68,6 +77,17 @@ public partial class @TouchAction: IInputActionCollection2, IDisposable
                     ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""49bc3cee-7eb4-405a-9242-d7a861519650"",
+                    ""path"": ""<Touchscreen>/primaryTouch/delta/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Acelerate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -78,6 +98,7 @@ public partial class @TouchAction: IInputActionCollection2, IDisposable
         m_Touch = asset.FindActionMap("Touch", throwIfNotFound: true);
         m_Touch_SingleTouch = m_Touch.FindAction("SingleTouch", throwIfNotFound: true);
         m_Touch_Move = m_Touch.FindAction("Move", throwIfNotFound: true);
+        m_Touch_Acelerate = m_Touch.FindAction("Acelerate", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -141,12 +162,14 @@ public partial class @TouchAction: IInputActionCollection2, IDisposable
     private List<ITouchActions> m_TouchActionsCallbackInterfaces = new List<ITouchActions>();
     private readonly InputAction m_Touch_SingleTouch;
     private readonly InputAction m_Touch_Move;
+    private readonly InputAction m_Touch_Acelerate;
     public struct TouchActions
     {
         private @TouchAction m_Wrapper;
         public TouchActions(@TouchAction wrapper) { m_Wrapper = wrapper; }
         public InputAction @SingleTouch => m_Wrapper.m_Touch_SingleTouch;
         public InputAction @Move => m_Wrapper.m_Touch_Move;
+        public InputAction @Acelerate => m_Wrapper.m_Touch_Acelerate;
         public InputActionMap Get() { return m_Wrapper.m_Touch; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -162,6 +185,9 @@ public partial class @TouchAction: IInputActionCollection2, IDisposable
             @Move.started += instance.OnMove;
             @Move.performed += instance.OnMove;
             @Move.canceled += instance.OnMove;
+            @Acelerate.started += instance.OnAcelerate;
+            @Acelerate.performed += instance.OnAcelerate;
+            @Acelerate.canceled += instance.OnAcelerate;
         }
 
         private void UnregisterCallbacks(ITouchActions instance)
@@ -172,6 +198,9 @@ public partial class @TouchAction: IInputActionCollection2, IDisposable
             @Move.started -= instance.OnMove;
             @Move.performed -= instance.OnMove;
             @Move.canceled -= instance.OnMove;
+            @Acelerate.started -= instance.OnAcelerate;
+            @Acelerate.performed -= instance.OnAcelerate;
+            @Acelerate.canceled -= instance.OnAcelerate;
         }
 
         public void RemoveCallbacks(ITouchActions instance)
@@ -193,5 +222,6 @@ public partial class @TouchAction: IInputActionCollection2, IDisposable
     {
         void OnSingleTouch(InputAction.CallbackContext context);
         void OnMove(InputAction.CallbackContext context);
+        void OnAcelerate(InputAction.CallbackContext context);
     }
 }

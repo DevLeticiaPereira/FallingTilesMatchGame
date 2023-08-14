@@ -29,15 +29,7 @@ namespace Utilities
             public TileData.TileColor TileColor = TileData.TileColor.None;
             public Tile Tile;
         }
-        
-        public enum GridChangedReason 
-        {
-            None,
-            TileAdded,
-            TileMatched,
-            TileDropped
-        }
-        
+
         public static Vector2Int GetAdjacentGridPosition(Vector2Int gridPosition, TileData.TileConnections direction)
         {
             int x = gridPosition.x;

@@ -44,6 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f55733330c7f184cbf9a3b8ec111443, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _gameSettings: {fileID: 11400000, guid: 656c12bfe976fbb49afaa440992b6b28, type: 2}
   _mainMenuSceneName: MainMenu
   _gameSceneSuffix: PlayerGameStage
   _exitGameConfirmMessage: Do you really want to exit the game?

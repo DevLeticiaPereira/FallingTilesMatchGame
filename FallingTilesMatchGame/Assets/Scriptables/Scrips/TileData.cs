@@ -51,7 +51,7 @@ public class TileData : ScriptableObject
     public Sprite DefaultSprite => _defaultSprite;
     public Sprite RootTileSprite => _rootTileSprite;
     public AnimationClip DeathAnimation => _deathAnimation;
-    
+
     #endregion Properties
 
     #region Methods

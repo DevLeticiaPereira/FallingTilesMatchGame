@@ -17,6 +17,7 @@ public class InputManager : Singleton<InputManager>
 	private PlayerInput _playerInput;
 	private InputAction _singleTouchInputAction;
 	private InputAction _moveInputAction;
+	private InputAction _accelerateInputAction;
 	private Vector2 _touchLastPosition;
 	
 	public enum DragHorizontalDirection
@@ -34,6 +35,7 @@ public class InputManager : Singleton<InputManager>
 		_playerInput = GetComponent<PlayerInput>();
 		_singleTouchInputAction = _playerInput.actions.FindAction("SingleTouch");
 		_moveInputAction = _playerInput.actions.FindAction("Move");
+		_accelerateInputAction = _playerInput.actions.FindAction("Accelerate");
 	}
 
 	private void OnEnable()
@@ -44,7 +46,6 @@ public class InputManager : Singleton<InputManager>
 		RunningGameState.OnGameStartRunning += () => {EnablePlayerInput(true);};
 		RunningGameState.OnGameStopRunning += () => {EnablePlayerInput(false);};
 	}
-
 	private void OnDestroy()
 	{
 		EventManager.EventExitedGameplayScene -= OnExitedGameplayScene;
@@ -64,7 +65,7 @@ public class InputManager : Singleton<InputManager>
 	{
 		PlayerInputEnabled = enable;
 	}
-	
+
 	private void TryToRotate(InputAction.CallbackContext context)
 	{
 		if (!PlayerInputEnabled)

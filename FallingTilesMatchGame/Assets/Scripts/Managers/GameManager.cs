@@ -8,18 +8,19 @@ using UnityEngine.SocialPlatforms.Impl;
 
 public class GameManager : Singleton<GameManager>
 {
+	[SerializeField] private GameSettings _gameSettings;
 	[SerializeField] private string _mainMenuSceneName;
 	[SerializeField] private string _gameSceneSuffix;
 	[SerializeField] private string _exitGameConfirmMessage = "Do you really want to exit the game?";
 	
 	//todo: make a game rules scriptable and take this out of here
-	[SerializeField] private int _minNumberOfTilesToMatch = 4;
+	//[SerializeField] private int _minNumberOfTilesToMatch = 4;
 
 	private Dictionary<Guid, int> _gridScoreMap = new Dictionary<Guid, int>();
 	public Guid PlayerGrid { get; private set; }
 	public int NumberOfPlayers { get; private set; }
-	public int MinNumberOfTilesToMatch => _minNumberOfTilesToMatch;
-	
+	//public int MinNumberOfTilesToMatch => _minNumberOfTilesToMatch;
+	public GameSettings GameSettings => _gameSettings;
 	#region States
 	public StateMachine<GameState> StateMachine { get; private set; }
 	public MainMenuGameState MenuState { get; private set; }

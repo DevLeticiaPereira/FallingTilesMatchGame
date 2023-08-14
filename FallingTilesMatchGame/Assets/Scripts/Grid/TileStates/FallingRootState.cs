@@ -11,13 +11,10 @@ namespace Grid.TileStates
         private Vector2 _targetWorldPosition;
         private Vector2 _inicialWorldPosition;
         
-        //todo add to inspector, to we can set it up
-        private readonly float _defaultFallSpeed = 2.0f;
-        private readonly float _boostedFallSpeed = 4.0f;
-        private readonly float _horizontalMoveSpeed = 8.0f;
-        private readonly float _rotateMoveSpeed = 8.0f;
+       private float _defaultFallSpeed = 2.0f; 
+       private float _moveTimeBetweenColumns = 8.0f;
 
-        private float _currentFallSpeed;
+       private float _currentFallSpeed;
         private bool _isAiControlled;
         private GridManager _gridManager;
         private Tile _beginPair;
@@ -30,6 +27,9 @@ namespace Grid.TileStates
         {
             _isAiControlled = gridManager.IsAiControlled;
             _gridManager = gridManager;
+            var _gameSettings = GameManager.Instance.GameSettings;
+            _defaultFallSpeed = _gameSettings.DefaultTileFallSpeed;
+            _moveTimeBetweenColumns = _gameSettings.MoveTimeBetweenColumns;
         }
 
        
@@ -165,7 +165,7 @@ namespace Grid.TileStates
             }
             
             _targetWorldPosition = GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, newTargetGridPosition);
-            TileOwner.StartToMoveHorizontal(0.1f, _targetWorldPosition.x);
+            TileOwner.StartToMoveHorizontal(_moveTimeBetweenColumns, _targetWorldPosition.x);
         }
 
         private Vector2Int GetNextPossibleHorizontalGridPosition(InputManager.DragHorizontalDirection dragHorizontalDirection, Vector2Int gridPosition)

@@ -12,15 +12,10 @@ namespace Grid
     {
        #region Serialized Fields
 
-        [Header("Grid setup and configurations")] [SerializeField]
-        private GridSetupData _gridSetupData;
-
-        [SerializeField] private GridScoreManager _gridScoreManager;
-
-        [SerializeField] private List<TileData> _tilesDataList;
-        [SerializeField] private GameObject _spawnMarkerPrefab;
-        [SerializeField] private List<Transform> _waitingPairSpawnPoints;
-        [SerializeField] private bool _isAiControlled;
+       [SerializeField] private GridScoreManager _gridScoreManager;
+       [SerializeField] private GameObject _spawnMarkerPrefab;
+       [SerializeField] private List<Transform> _waitingPairSpawnPoints;
+       [SerializeField] private bool _isAiControlled;
 
         #endregion
 
@@ -32,7 +27,6 @@ namespace Grid
         //dictionary that links grid position to each cell info
         public Dictionary<Vector2Int, GridUtilities.CellInfo> Grid { get; private set; } =
             new Dictionary<Vector2Int, GridUtilities.CellInfo>();
-
         //Dictionary that links the tile type to its data
         private Dictionary<TileData.TileColor, TileData> _tilesDataDictionary = new Dictionary<TileData.TileColor, TileData>();
 
@@ -41,18 +35,15 @@ namespace Grid
 
         //List of pairs that are displayed in the game as the next pair to enter the grid
         private List<(Tile, Tile)> _waitingPairs = new List<(Tile, Tile)>();
-        //The pair that is taking from the waiting list and add at the top of the grid
-        //private (Tile, Tile) _activatedFallingPair = (null, null);
-        //All tiles that are current falling
+
+        private int _minNumberToMatch = 4;
+        private GridSetupData _gridSetupData;
         private int _numberOfFallingTiles = 0;
         private int _tileOnMatchingState = 0;
         private int _numberOfTilesDropping = 0;
         private HashSet<Vector2Int> _gridPositionsToCheck = new HashSet<Vector2Int>();
-        //private Dictionary<Vector2Int, Tile> _bufferForDroppingTiles = new Dictionary<Vector2Int, Tile>();
         private List<Vector2Int> _gridWaitingToDropPositions = new List<Vector2Int>();
-        
-        
-        
+        private List<TileData> _tilesDataList;
         private Vector2Int _startGridPositionTile1;
         private Vector2Int _startGridPositionTile2;
         private GameObject _spawnMarker;
@@ -83,6 +74,10 @@ namespace Grid
 
         private void Awake()
         {
+            _gridSetupData = GameManager.Instance.GameSettings.GridSetupData;
+            _minNumberToMatch = GameManager.Instance.GameSettings.MinNumberOfTilesToMatch;
+            _tilesDataList = GameManager.Instance.GameSettings.TilesData;
+            
             foreach (var tileData in _tilesDataList)
             {
                 if (!_tilesDataDictionary.ContainsKey(tileData.ColorTile))
@@ -299,7 +294,7 @@ namespace Grid
             foreach (var gridPositionToCheck in gridPositionsToCheck)
             {
                 var connectedGridPosition = GridUtilities.GetChainConnectedTiles(Grid, gridPositionToCheck);
-                if (connectedGridPosition.Count >= GameManager.Instance.MinNumberOfTilesToMatch)
+                if (connectedGridPosition.Count >= _minNumberToMatch)
                 {
                     gridPositionsMatched.UnionWith(connectedGridPosition);
                 }

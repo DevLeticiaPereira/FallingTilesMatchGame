@@ -18,9 +18,8 @@ namespace Grid.TileStates
         /// setup in the Enter and used later for faster color connection check
         /// </summary>
         private Dictionary<Vector2Int, TileData.TileConnections> _neighborConnectionMap = new Dictionary<Vector2Int, TileData.TileConnections>();
-        
+        private float _moveDropDuration = 0.5f;
         private readonly GridManager _gridManager;
-        private bool _waitingToFall = false;
 
         public PlacedOnGridState(Tile tileOwner, StateMachine<TileState> tileStateMachine, GridManager gridManager) : base(tileOwner, tileStateMachine)
         {
@@ -30,6 +29,7 @@ namespace Grid.TileStates
         public override void Enter()
         {
             base.Enter();
+            _moveDropDuration = GameManager.Instance.GameSettings.DroppingMoveDuration;
             EventManager.EventTilesDroppedFromGrid += OnDroppedFromGrid;
             EventManager.EventTilesMatched += OnTilesMatched;
             EventManager.EventTilesAddedToGrid += OnTilesAddedToGrid;
@@ -85,7 +85,7 @@ namespace Grid.TileStates
             {
                 TileOwner.SetDefaultSprite();
                 _neighborConnectionMap = GetNeighborGridPositions(positionsChangedMap[TileOwner.GridPosition.Value]);
-                TileOwner.StartToMoveGridPosition(0.5f, positionsChangedMap[TileOwner.GridPosition.Value]);
+                TileOwner.StartToMoveGridPosition(_moveDropDuration, positionsChangedMap[TileOwner.GridPosition.Value]);
                 return;
             }
 

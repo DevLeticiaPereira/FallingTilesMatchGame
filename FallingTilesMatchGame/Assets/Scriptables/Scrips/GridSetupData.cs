@@ -23,9 +23,8 @@ public class GridSetupData : ScriptableObject, ISerializationCallbackReceiver
     [SerializeField] private GameObject _blockBackgroundPrefabType2;
     [SerializeField] private GameObject _tilePrefab;
     [SerializeField] private int _columnToSpawn;
-    
+
     [NonReorderable] 
-    // Work around unity editor problem, plus better layout
     public List<TilesSpawnWeight> TilesSpawnWeight;
     public int Rows => _rows;
     public int Columns => _columns;

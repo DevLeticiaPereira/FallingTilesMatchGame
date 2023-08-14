@@ -7,20 +7,11 @@ using Utilities;
 public class FallingChildState : TileState
 {
     private Vector2 _targetWorldPosition;
-    private Vector2Int _currentGridTemporaryPosition;
-    private float _currentFallSpeed;
-
-    //todo add to inspector, to we can set it up
-    private readonly float _defaultFallSpeed = 2.0f;
-    private readonly float _boostedFallSpeed = 4.0f;
-    private readonly float _horizontalMoveSpeed = 8.0f;
-    private readonly float _rotateMoveSpeed = 8.0f;
     private Vector2 _gridCellDimensions;
     private bool _isAiControlled;
     private GridManager _gridManager;
     private Tile _beginPair;
-    private bool _isRotating;
-    private bool _tileReachedGrid = false;
+    private bool _tileReachedGrid;
     public TileData.TileConnections _currentPositionRelatedToTileRoot = TileData.TileConnections.Up;
     
     public FallingChildState(Tile tileOwner, StateMachine<TileState> tileStateMachine, GridManager gridManager) : base(tileOwner, tileStateMachine)
@@ -178,19 +169,14 @@ public class FallingChildState : TileState
 
     private TileData.TileConnections GetNexRotateDirection()
     {
-        switch (_currentPositionRelatedToTileRoot)
+        return _currentPositionRelatedToTileRoot switch
         {
-            case TileData.TileConnections.Right:
-                return TileData.TileConnections.Down;
-            case TileData.TileConnections.Left:
-                return TileData.TileConnections.Up;
-            case TileData.TileConnections.Up:
-                return TileData.TileConnections.Right;
-            case TileData.TileConnections.Down:
-                return TileData.TileConnections.Left;
-        }
-
-        return TileData.TileConnections.None;
+            TileData.TileConnections.Right => TileData.TileConnections.Down,
+            TileData.TileConnections.Left => TileData.TileConnections.Up,
+            TileData.TileConnections.Up => TileData.TileConnections.Right,
+            TileData.TileConnections.Down => TileData.TileConnections.Left,
+            _ => TileData.TileConnections.None
+        };
     }
     
 }

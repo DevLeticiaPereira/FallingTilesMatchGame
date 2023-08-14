@@ -5,15 +5,9 @@ using Utilities;
 
 namespace Grid.TileStates
 {
-    
-    
-    
     public class FallingState : TileState
     {
-        static int numberOfTilesReceivingRotate = 0;
-        
-        private readonly float _droppingFallSpeed = 5.0f;
-        
+        private float _droppingFallSpeed = 5.0f;
         private GridManager _gridManager;
         private Vector2 _gridCellDimensions;
         private Vector2 _targetWorldPosition;
@@ -26,31 +20,17 @@ namespace Grid.TileStates
         public override void Enter()
         {
             base.Enter();
+            _droppingFallSpeed = GameManager.Instance.GameSettings.SingleTileFallSpeed;
             TileOwner.SetDefaultSprite();
             _gridCellDimensions = _gridManager.GridInfo.BlockDimensions;
-            ++numberOfTilesReceivingRotate;
-            Debug.Log("numberOfTilesReceivingRotate" +numberOfTilesReceivingRotate);
-            EventManager.EventTileReachedGrid += TileReachedGrid;
              UpdateGridTarget();
         }
 
         public override void Exit()
         {
             base.Exit();
-            --numberOfTilesReceivingRotate;
-            Debug.Log("numberOfTilesReceivingRotate" +numberOfTilesReceivingRotate);
-            EventManager.EventTileReachedGrid -= TileReachedGrid;
         }
 
-        private void TileReachedGrid(Guid gridId, Vector2Int gridPosition, Tile tile)
-        {
-            if (gridId != _gridManager.GridID)
-            {
-                return;
-            }
-
-        }
-        
         private void UpdateGridTarget()
         {
             bool foundValidPos = false;

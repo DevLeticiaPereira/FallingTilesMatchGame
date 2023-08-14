@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ca5cc4e77e623f43a79720b0c151184, type: 3}
+  m_Name: GameSettings
+  m_EditorClassIdentifier: 
+  _endGameScreenTime: 3
+  _gridSetupData: {fileID: 11400000, guid: e5277c62718b2574a80dc8411098aeda, type: 2}
+  _minNumberOfTilesToMatch: 4
+  _tilesData:
+  - {fileID: 11400000, guid: 74f53958cd1eade4ba60dac14133ea37, type: 2}
+  - {fileID: 11400000, guid: 36318e02bddbc9344ba498b05e968f0f, type: 2}
+  - {fileID: 11400000, guid: a9124965640052f4fba0537bd01f9aab, type: 2}
+  - {fileID: 11400000, guid: fb630e4a835fe4049b1b114d93986568, type: 2}
+  - {fileID: 11400000, guid: 0a4bbb9ef7cf6ac45bd3bb907cfc2474, type: 2}
+  _defaultTileFallSpeed: 3
+  _boostedTileFallSpeed: 5
+  _singleTileFallSpeed: 4
+  moveTimeBetweenColumns: 0.1
+  _endGameTilesFallingSpeed: 10
+  _droppingMoveDuration: 0.2
+  _scoreData: {fileID: 11400000, guid: 4c8906ee56fb5414fbdcc6e20a2f9183, type: 2}

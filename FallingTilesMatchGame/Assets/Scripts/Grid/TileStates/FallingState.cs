@@ -2,10 +2,16 @@ using System;
 using UnityEngine;
 using Utilities;
 
+
 namespace Grid.TileStates
 {
+    
+    
+    
     public class FallingState : TileState
     {
+        static int numberOfTilesReceivingRotate = 0;
+        
         private readonly float _droppingFallSpeed = 5.0f;
         
         private GridManager _gridManager;
@@ -22,6 +28,8 @@ namespace Grid.TileStates
             base.Enter();
             TileOwner.SetDefaultSprite();
             _gridCellDimensions = _gridManager.GridInfo.BlockDimensions;
+            ++numberOfTilesReceivingRotate;
+            Debug.Log("numberOfTilesReceivingRotate" +numberOfTilesReceivingRotate);
             EventManager.EventTileReachedGrid += TileReachedGrid;
              UpdateGridTarget();
         }
@@ -29,6 +37,8 @@ namespace Grid.TileStates
         public override void Exit()
         {
             base.Exit();
+            --numberOfTilesReceivingRotate;
+            Debug.Log("numberOfTilesReceivingRotate" +numberOfTilesReceivingRotate);
             EventManager.EventTileReachedGrid -= TileReachedGrid;
         }
 

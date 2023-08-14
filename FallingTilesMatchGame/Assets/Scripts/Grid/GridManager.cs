@@ -134,25 +134,9 @@ namespace Grid
             }
             
             //WARN TILES ABOUT GRID ADDED TILES AND UPDATE ITS CONNECTIONS
-            //EventManager.InvokeUpdateTilesWithGridChanges(GridID, _gridPositionsToCheck, GridUtilities.GridChangedReason.TileAdded);
             EventManager.InvokeTilesAddedToGrid(GridID, _gridPositionsToCheck);
             //HANDLE CHECK FOR MATCH AND WARN TILES IF ANY TILE WAS REMOVED
-            var gridPositionsMatched = CheckForMatches();
-            foreach (var gridPositionMatched in gridPositionsMatched)
-            {
-                RemoveTileFromGrid(gridPositionMatched);
-            }
-            
-            _gridPositionsToCheck.Clear();
-            _tileOnMatchingState = gridPositionsMatched.Count;
-            
-            if (gridPositionsMatched.Count>0)
-            {
-                _gridScoreManager.AddScoreToGrid(gridPositionsMatched.Count);
-                //EventManager.InvokeUpdateTilesWithGridChanges(GridID, gridPositionsMatched, GridUtilities.GridChangedReason.TileMatched);
-                EventManager.InvokeTilesMatched(GridID, gridPositionsMatched);
-            }
-            else
+            if (!TryToFindMatches())
             {
                 InputManager.Instance.EnablePlayerInput(true);
                 ActivateWaitingPair();
@@ -170,11 +154,12 @@ namespace Grid
             {
                 return;
             }
-            
             tile.SetGridPosition(gridPosition);
-            _gridPositionsToCheck.Add(gridPosition);
             
+            //UPDATE FLOW CONTROLLER VARIABLES
+            _gridPositionsToCheck.Add(gridPosition);
             --_numberOfTilesDropping;
+            
             if (_numberOfTilesDropping > 0)
             {
                 return;
@@ -184,27 +169,17 @@ namespace Grid
             EventManager.InvokeTilesAddedToGrid(GridID, _gridPositionsToCheck);
             
             //HANDLE CHECK FOR MATCH AND WARN TILES IF ANY TILE WAS REMOVED
-            var gridMatchedPositions = CheckForMatches();
-            foreach (var gridMatchedPosition in gridMatchedPositions)
-            {
-                RemoveTileFromGrid(gridMatchedPosition);
-            }
-            
-            _gridPositionsToCheck.Clear();
-            _tileOnMatchingState = gridMatchedPositions.Count;
-            
-            if (gridMatchedPositions.Count>0)
-            {
-                _gridScoreManager.AddScoreToGrid(gridMatchedPositions.Count);
-                EventManager.InvokeTilesMatched(GridID, gridMatchedPositions);
-            }
-            else
+            if (!TryToFindMatches())
             {
                 InputManager.Instance.EnablePlayerInput(true);
                 ActivateWaitingPair();
             }
         }
+
         
+
+        //callback received when a tile is destroyed, once all tiles that were predicted to be destroyed reaches here,
+        //it will check if any tile wants to drop and if not restart the loop with a new tile on the grid top
         private void OnTileDestroyed(Guid id)
         {
             if (id != GridID)
@@ -228,40 +203,9 @@ namespace Grid
             ProcessTileDrop();
         }
 
-        private void ProcessTileDrop()
-        {
-            var oldToNewPositionMap = new Dictionary<Vector2Int, Vector2Int>();
-            foreach (var gridWaitingToDropPosition in _gridWaitingToDropPositions)
-            {
-                if (!Grid.ContainsKey(gridWaitingToDropPosition))
-                {
-                    continue;
-                }
-
-                var cell = Grid[gridWaitingToDropPosition];
-                var newPosition = new Vector2Int(-1, -1);
-                for (int i = 0; i < _gridSetupData.Rows; i++)
-                {
-                    newPosition = new Vector2Int(gridWaitingToDropPosition.x, i);
-                    if (GridUtilities.IsGridPositionAvailable(Grid, newPosition) 
-                        && !oldToNewPositionMap.ContainsValue(newPosition))
-                    {
-                        break;
-                    }
-                }
-
-                if (newPosition == new Vector2Int(-1, -1))
-                {
-                    Debug.LogError("cant find a valid place to drop tile.");
-                }
-                oldToNewPositionMap[gridWaitingToDropPosition] = newPosition;
-                RemoveTileFromGrid(gridWaitingToDropPosition);
-            }
-            _numberOfTilesDropping = oldToNewPositionMap.Count;
-            EventManager.InvokeTilesDroppedFromGrid(GridID, oldToNewPositionMap);
-            _gridWaitingToDropPositions.Clear();
-        }
-
+        //When a tile loose a down connection it send this event to enter the _gridWaitingToDropPositions list.
+        //All tiles that are above this will also enter that list
+        //they will be waiting for all matched tiles to be destroyed so it can begin to drop
         private void OnShouldFallFromPosition(Guid id, Vector2Int gridPosition)
         {
             if (id != GridID)
@@ -284,10 +228,75 @@ namespace Grid
 
         #region Private Methods
         
-        private HashSet<Vector2Int> CheckForMatches()
+        
+        //Assign and store new position for all dropped tiles 
+        //Dropped tiles will start will receive the even and start to move to new position
+        //other tiles will will receive the event as well and updates its connections
+        private void ProcessTileDrop()
+        {
+            var oldToNewPositionMap = new Dictionary<Vector2Int, Vector2Int>();
+            foreach (var gridWaitingToDropPosition in _gridWaitingToDropPositions)
+            {
+                if (!Grid.ContainsKey(gridWaitingToDropPosition))
+                {
+                    continue;
+                }
+
+                var cell = Grid[gridWaitingToDropPosition];
+                if (!TryGetNewAvailableDropPosition(gridWaitingToDropPosition, oldToNewPositionMap, out Vector2Int newPosition))
+                {
+                    Debug.LogError("cant find a valid place to drop tile.");
+                    continue;
+                }
+                oldToNewPositionMap[gridWaitingToDropPosition] = newPosition;
+                RemoveTileFromGrid(gridWaitingToDropPosition);
+            }
+            _numberOfTilesDropping = oldToNewPositionMap.Count;
+            EventManager.InvokeTilesDroppedFromGrid(GridID, oldToNewPositionMap);
+            _gridWaitingToDropPositions.Clear();
+        }
+        //look for an empty position on the grid starting from the bottom 
+        //consider grip and also the dropped tiles that had already been assign a new position on the grid
+        private bool TryGetNewAvailableDropPosition(Vector2Int gridWaitingToDropPosition,
+            Dictionary<Vector2Int, Vector2Int> oldToNewPositionMap, out Vector2Int newPosition)
+        {
+            newPosition = new Vector2Int(-1, -1);
+            for (int i = 0; i < _gridSetupData.Rows; i++)
+            {
+                newPosition = new Vector2Int(gridWaitingToDropPosition.x, i);
+                if (GridUtilities.IsGridPositionAvailable(Grid, newPosition)
+                    && !oldToNewPositionMap.ContainsValue(newPosition))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        
+        private bool TryToFindMatches()
+        {
+            var gridMatchedPositions = CheckForMatches(_gridPositionsToCheck);
+            if (gridMatchedPositions.Count > 0)
+            {
+                foreach (var gridMatchedPosition in gridMatchedPositions)
+                {
+                    RemoveTileFromGrid(gridMatchedPosition);
+                }
+                _gridScoreManager.AddScoreToGrid(gridMatchedPositions.Count);
+                EventManager.InvokeTilesMatched(GridID, gridMatchedPositions);
+            }
+            
+            _gridPositionsToCheck.Clear();
+            _tileOnMatchingState = gridMatchedPositions.Count;
+            return gridMatchedPositions.Count > 0;
+        }
+
+        //return all matched positions for matches that are made int the grid with the grid Positions To Check hashset
+        private HashSet<Vector2Int> CheckForMatches(HashSet<Vector2Int> gridPositionsToCheck)
         {
             HashSet<Vector2Int> gridPositionsMatched = new HashSet<Vector2Int>();
-            foreach (var gridPositionToCheck in _gridPositionsToCheck)
+            foreach (var gridPositionToCheck in gridPositionsToCheck)
             {
                 var connectedGridPosition = GridUtilities.GetChainConnectedTiles(Grid, gridPositionToCheck);
                 if (connectedGridPosition.Count >= GameManager.Instance.MinNumberOfTilesToMatch)
@@ -316,7 +325,8 @@ namespace Grid
             cell.Tile = null;
             cell.TileColor = TileData.TileColor.None;
         }
-
+        
+        //Get pair of tiles waiting on the grid board and activate them in game
         private void ActivateWaitingPair()
         {
             if (_waitingPairs.Count == 0)
@@ -339,7 +349,7 @@ namespace Grid
             EventManager.InvokePlacedTileAtGridStartPoint(GridID, tileToMoveInfo);
             UpdateGridWaitingPairs();
         }
-
+        //Move waiting pair waiting to empty position em fill up the spawn now waiting tiles
         private void UpdateGridWaitingPairs()
         {
             //reorder pairs
@@ -384,7 +394,8 @@ namespace Grid
         #endregion
 
         #region InitialGridSetups
-
+        
+        //When trying to spawn a tile take into consideration its weigh probability to spawn. 
         private TileData GetRandomWeightedTileData()
         {
             float randomTileProbability = Random.Range(0.0f, 1.0f);
@@ -419,6 +430,7 @@ namespace Grid
 
             return newTileData;
         }
+        //calculate tiles spawn probability and store it to easy access for gameplay
         private void LoadTilesSpawnProbability()
         {
             // Calculate Total Spawn Weights
@@ -453,6 +465,7 @@ namespace Grid
                 }
             }
         }
+        //setup tiles start position on the grid and instantiate game object that marks it
         private void SetupStartPosition()
         {
             _startGridPositionTile1 = new Vector2Int(_gridSetupData.ColumnToSpawn, _gridSetupData.Rows - 2);

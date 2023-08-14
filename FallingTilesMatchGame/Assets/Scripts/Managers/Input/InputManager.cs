@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 public class InputManager : Singleton<InputManager>
 {
-	public static event Action Rotate;
-	public static event Action<DragHorizontalDirection> MoveHorizontal;
-	
 	public bool PlayerInputEnabled { get; private set; }
 	
 	[SerializeField]
@@ -27,7 +25,6 @@ public class InputManager : Singleton<InputManager>
 		Left,
 		Right
 	}
-
 	protected override void Awake()
 	{
 		base.Awake();
@@ -41,18 +38,32 @@ public class InputManager : Singleton<InputManager>
 
 	private void OnEnable()
 	{
+		EventManager.EventExitedGameplayScene += OnExitedGameplayScene;
 		_singleTouchInputAction.performed += TryToRotate;
 		_moveInputAction.performed += TryToMoveHorizontal;
 		RunningGameState.OnGameStartRunning += () => {EnablePlayerInput(true);};
 		RunningGameState.OnGameStopRunning += () => {EnablePlayerInput(false);};
 	}
 
-	private void OnDisable()
+	private void OnGameOver()
 	{
+		EventManager.UnsubscribeAllRotate();
+		EventManager.UnsubscribeAllMoveHorizontal();
+	}
+
+	private void OnDestroy()
+	{
+		EventManager.EventExitedGameplayScene -= OnExitedGameplayScene;
 		_singleTouchInputAction.performed -= TryToRotate;
 		_moveInputAction.performed -= TryToMoveHorizontal;
 		RunningGameState.OnGameStartRunning -= () => {EnablePlayerInput(true);};
 		RunningGameState.OnGameStopRunning -= () => {EnablePlayerInput(false);};
+	}
+
+	private void OnExitedGameplayScene()
+	{
+		EventManager.UnsubscribeAllRotate();
+		EventManager.UnsubscribeAllMoveHorizontal();
 	}
 
 	public void EnablePlayerInput(bool enable)
@@ -70,7 +81,7 @@ public class InputManager : Singleton<InputManager>
 		Vector2 touchPosition = Touchscreen.current.primaryTouch.position.ReadValue();
 		if (!IsTouchOverUI(touchPosition) && PlayerInputEnabled)
 		{
-			Rotate?.Invoke();
+			EventManager.InvokeRotate();
 		}
 	}
 	
@@ -102,7 +113,7 @@ public class InputManager : Singleton<InputManager>
 				if (direction.magnitude > 0)
 				{
 					DragHorizontalDirection dragHorizontalDirection = GetDragDirection(direction);
-					MoveHorizontal?.Invoke(dragHorizontalDirection);
+					EventManager.InvokeMoveHorizontal(dragHorizontalDirection);
 				}
 				// Update the last touch position for the next frame
 				_touchLastPosition = currentTouchPos;

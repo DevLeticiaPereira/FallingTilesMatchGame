@@ -2,20 +2,42 @@ using System;
 using System.Collections.Generic;
 using Grid;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public static class EventManager
 {
+    #region INPUTS
+    public static event Action EventRotate;
+    public static event Action<InputManager.DragHorizontalDirection> EventMoveHorizontal;
+    #endregion INPUTS
+
+    #region GRID/TILE COMMUNICATION
     public static event Action<Guid, Vector2Int, Tile> EventTileReachedGrid;
     public static event Action<Guid, Vector2Int, Tile> EventDroppedTileReachedGrid;
     public static event Action<Guid, HashSet<Tile>> EventPlacedTileAtGridPosition;
     public static event Action<Guid, HashSet<Vector2Int>> EventTilesAddedToGrid;
     public static event Action<Guid, Dictionary<Vector2Int, Vector2Int>> EventTilesDroppedFromGrid;
     public static event Action<Guid, HashSet<Vector2Int>> EventTilesMatched;
-    public static event Action<Guid> EventGridGameOver;
     public static event Action<Guid> EventTileDestroyed;
     public static event Action<Guid, Vector2Int> EventShouldFallFromPosition;
+    #endregion
+    
+    #region GAME GENERAL EVENTS
+    public static event Action<Guid> EventGridGameOver;
     public static event Action<Guid, int> EventScore;
+    public static event Action EventExitedGameplayScene; 
+    #endregion
 
+    #region INVOKE FUNCTIONS
+    public static void InvokeMoveHorizontal(InputManager.DragHorizontalDirection dragHorizontalDirection)
+    {
+        EventMoveHorizontal?.Invoke(dragHorizontalDirection);
+    }
+    
+    public static void InvokeRotate()
+    {
+        EventRotate?.Invoke();
+    }
     
     public static void InvokeTileReachedGrid(Guid gridID, Vector2Int gridPosition, Tile tile)
     {
@@ -66,5 +88,38 @@ public static class EventManager
     {
         EventScore?.Invoke(gridID, newScore);
     }
+    
+    public static void InvokeExitedGameplayScene()
+    {
+        EventExitedGameplayScene?.Invoke();
+    }
+    
+    #endregion
+
+    #region UNSUBSCRIBE ALL FUNCTIONS
+    public static void UnsubscribeAllRotate()
+    {
+        var delegates = EventRotate.GetInvocationList();
+        foreach (var del in delegates)
+        {
+            if (del is Action listener)
+            {
+                EventRotate -= listener;
+            }    
+        }
+    }
+    
+    public static void UnsubscribeAllMoveHorizontal()
+    {
+        var delegates = EventMoveHorizontal.GetInvocationList();
+        foreach (var del in delegates)
+        {
+            if (del is Action<InputManager.DragHorizontalDirection> listener)
+            {
+                EventMoveHorizontal -= listener;
+            }    
+        }
+    }
+    #endregion
 }
 

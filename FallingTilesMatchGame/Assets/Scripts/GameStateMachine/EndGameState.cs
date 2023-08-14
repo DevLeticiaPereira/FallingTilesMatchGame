@@ -1,6 +1,6 @@
 public class EndGameState : GameState
 {
-    private float _endGameScreenTime = 3.0f;
+    private readonly float _endGameScreenTime = 3.0f;
     public EndGameState(GameManager gameManager, StateMachine<GameState> gameStateMachine) : base(gameManager, gameStateMachine) { }
 
     public override void Enter()
@@ -20,5 +20,6 @@ public class EndGameState : GameState
 
     public override void Exit()
     {
+        
     }
 }

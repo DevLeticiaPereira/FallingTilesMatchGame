@@ -38,7 +38,7 @@ namespace Grid.TileStates
             base.Enter();
             if (!_isAiControlled)
             {
-                InputManager.MoveHorizontal += MoveHorizontal;
+                EventManager.EventMoveHorizontal += MoveHorizontal;
             }
             
             EventManager.EventTileReachedGrid += TileReachedGrid;
@@ -68,7 +68,7 @@ namespace Grid.TileStates
             base.Exit();
             if (!_isAiControlled)
             {
-                InputManager.MoveHorizontal -= MoveHorizontal;
+                EventManager.EventMoveHorizontal -= MoveHorizontal;
             }
             EventManager.EventTileReachedGrid -= TileReachedGrid;
         }

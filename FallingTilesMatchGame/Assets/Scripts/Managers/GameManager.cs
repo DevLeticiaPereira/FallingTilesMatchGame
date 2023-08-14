@@ -151,10 +151,11 @@ public class GameManager : Singleton<GameManager>
 			Debug.LogError($"Scene {_mainMenuSceneName} cannot be loaded.");
 			return;
 		}
+		EventManager.InvokeExitedGameplayScene();
 		UIManager.Instance.UnloadAll();
-		SceneManager.LoadScene(_mainMenuSceneName);
 		_gridScoreMap.Clear();
 		PlayerGrid = Guid.NewGuid();
+		SceneManager.LoadScene(_mainMenuSceneName);
 	}
 	
 	#endregion

@@ -28,12 +28,11 @@ namespace Grid.TileStates
             TileOwner.transform.position = new Vector3(TileOwner.transform.position.x, TileOwner.transform.position.y - _speedFallingOutOFBounds * Time.deltaTime, 0f);
 
             // Check if the tile has reached the destination position
-            if (TileOwner.transform.position.y > _yLimitPosition)
+            if (TileOwner.transform.position.y < _yLimitPosition)
             {
+                TileOwner.Destroy();
                 return;
             }
-            
-            TileOwner.Destroy();
         }
     }
 }

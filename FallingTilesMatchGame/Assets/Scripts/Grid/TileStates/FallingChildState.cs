@@ -42,7 +42,7 @@ public class FallingChildState : TileState
         
         if (!_isAiControlled)
         {
-            InputManager.Rotate += Rotate;
+            EventManager.EventRotate += Rotate;
         }
         EventManager.EventTileReachedGrid += TileReachedGrid;
         UpdateGridTarget();
@@ -53,7 +53,7 @@ public class FallingChildState : TileState
         base.Exit();
         if (!_isAiControlled)
         {
-            InputManager.Rotate -= Rotate;
+            EventManager.EventRotate -= Rotate;
         }
         EventManager.EventTileReachedGrid -= TileReachedGrid;
     }

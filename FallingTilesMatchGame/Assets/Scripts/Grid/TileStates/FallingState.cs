@@ -7,7 +7,7 @@ namespace Grid.TileStates
 {
     public class FallingState : TileState
     {
-        private float _droppingFallSpeed = 5.0f;
+        private float _singleTileFallSpeed;
         private GridManager _gridManager;
         private Vector2 _gridCellDimensions;
         private Vector2 _targetWorldPosition;
@@ -20,22 +20,17 @@ namespace Grid.TileStates
         public override void Enter()
         {
             base.Enter();
-            _droppingFallSpeed = GameManager.Instance.GameSettings.SingleTileFallSpeed;
+            _singleTileFallSpeed = GameManager.Instance.GameSettings.SingleTileFallSpeed;
             TileOwner.SetDefaultSprite();
             _gridCellDimensions = _gridManager.GridInfo.BlockDimensions;
              UpdateGridTarget();
-        }
-
-        public override void Exit()
-        {
-            base.Exit();
         }
 
         private void UpdateGridTarget()
         {
             bool foundValidPos = false;
             Vector2Int firstAvailablePosition = new Vector2Int(); 
-            for (int i = 0; i <= TileOwner.TemporaryGridPosition.Value.y; ++i)
+            for (int i = 0; i <= _gridManager.GridInfo.Rows; ++i)
             {
                 var positionToCheck = new Vector2Int(TileOwner.TemporaryGridPosition.Value.x, i);
                 if (GridUtilities.IsGridPositionAvailable(_gridManager.Grid, positionToCheck))
@@ -63,21 +58,21 @@ namespace Grid.TileStates
             }
 
             base.Update();
-
-            if (Vector2.Distance(TileOwner.transform.position, _targetWorldPosition) < 0.05)
-            {
-                HandleTileReachedGrid();
-                return;
-            }
             
             if (TryUpdateTileTemporaryGridPosition())
             {
                 UpdateGridTarget();
             }
+
+            if (Vector2.Distance(TileOwner.transform.position, _targetWorldPosition) <_singleTileFallSpeed * Time.deltaTime)
+            {
+                HandleTileReachedGrid();
+                return;
+            }
             
-            ///Vector2 movementDirection = (_targetWorldPosition - (Vector2)TileOwner.transform.position).normalized;
-            float stepY = _droppingFallSpeed * Time.deltaTime /** movementDirection.y*/;
-            TileOwner.transform.position -= new Vector3(0, stepY, 0f);
+            Vector2 movementDirection = (_targetWorldPosition - (Vector2)TileOwner.transform.position).normalized;
+            float stepY = _singleTileFallSpeed * Time.deltaTime * movementDirection.y;
+            TileOwner.transform.position += new Vector3(0, stepY, 0f);
         }
         
         private void HandleTileReachedGrid()

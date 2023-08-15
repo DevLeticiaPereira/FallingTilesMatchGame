@@ -69,18 +69,17 @@ public class FallingChildState : TileState
         }
 
         base.Update();
-
-        if (Vector2.Distance(TileOwner.transform.position, _targetWorldPosition) < 0.05)
-        {
-            HandleTileReachedGrid();
-            return;
-        }
         
         if (TryUpdateTileTemporaryGridPosition())
         {
             UpdateGridTarget();
         }
-        
+
+        if (Vector2.Distance(TileOwner.transform.position, _targetWorldPosition) < _beginPair.FallingRootTileState.CurrentFallSpeed * Time.deltaTime)
+        {
+            HandleTileReachedGrid();
+            return;
+        }
     }
 
     private void HandleTileReachedGrid()
@@ -142,7 +141,7 @@ public class FallingChildState : TileState
     {
         bool foundValidPos = false;
         Vector2Int firstAvailablePosition = new Vector2Int(); 
-        for (int i = 0; i <= TileOwner.TemporaryGridPosition.Value.y; ++i)
+        for (int i = 0; i <= _gridManager.GridInfo.Rows; ++i)
         {
             var positionToCheck = new Vector2Int(TileOwner.TemporaryGridPosition.Value.x, i);
             if (GridUtilities.IsGridPositionAvailable(_gridManager.Grid, positionToCheck))

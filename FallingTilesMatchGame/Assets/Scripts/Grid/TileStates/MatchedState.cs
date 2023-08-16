@@ -1,10 +1,9 @@
-using System;
-
 namespace Grid.TileStates
 {
     public class MatchedState : TileState
     {
-       public MatchedState(Tile tileOwner, StateMachine<TileState> tileStateMachine) : base(tileOwner, tileStateMachine)
+        public MatchedState(Tile tileOwner, StateMachine<TileState> tileStateMachine) : base(tileOwner,
+            tileStateMachine)
         {
         }
 
@@ -19,10 +18,7 @@ namespace Grid.TileStates
         public override void Update()
         {
             base.Update();
-            if (_stateTimer <= 0)
-            {
-                TileOwner.Destroy();
-            }
+            if (_stateTimer <= 0) TileOwner.Destroy();
         }
     }
 }

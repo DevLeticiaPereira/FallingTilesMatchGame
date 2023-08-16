@@ -7,16 +7,6 @@ namespace Managers
 {
     public class UIManager : Singleton<UIManager>
     {
-        [SerializeField] private List<PanelInfo> _panelsInfo;
-
-        private Dictionary<PanelType, GameObject> _panels = new Dictionary<PanelType, GameObject>();
-        private Dictionary<PanelType, GameObject> _panelPrefabs = new Dictionary<PanelType, GameObject>();
-        private RectTransform _rectTransform;
-        private List<PanelType> _openedPanelsOrder = new List<PanelType>();
-        public PanelType PanelOnFocus { get; private set; }
-        public static event Action<PanelType> PanelFocusEntered;
-        public static event Action<PanelType> PanelFocusExited;
-
         public enum PanelType
         {
             None,
@@ -27,30 +17,35 @@ namespace Managers
             Confirm
         }
 
+        [SerializeField] private List<PanelInfo> _panelsInfo;
+        private List<PanelType> _openedPanelsOrder = new();
+        private readonly Dictionary<PanelType, GameObject> _panelPrefabs = new();
+
+        private readonly Dictionary<PanelType, GameObject> _panels = new();
+        private RectTransform _rectTransform;
+        public PanelType PanelOnFocus { get; private set; }
+
         protected override void Awake()
         {
             base.Awake();
             _rectTransform = GetComponent<RectTransform>();
 
-            foreach (var panelInfo in _panelsInfo)
-            {
-                _panelPrefabs[panelInfo.Type] = panelInfo.prefab;
-            }
+            foreach (var panelInfo in _panelsInfo) _panelPrefabs[panelInfo.Type] = panelInfo.prefab;
         }
+
+        public static event Action<PanelType> PanelFocusEntered;
+        public static event Action<PanelType> PanelFocusExited;
 
         public bool LoadPanel(PanelType panelType)
         {
-            if (_panels.ContainsKey(panelType))
-            {
-                return false;
-            }
-            
-            if (!_panelPrefabs.TryGetValue(panelType, out GameObject panelPrefab))
+            if (_panels.ContainsKey(panelType)) return false;
+
+            if (!_panelPrefabs.TryGetValue(panelType, out var panelPrefab))
             {
                 Debug.LogError($"Missing prefab for panel type {panelType}");
                 return false;
             }
-            
+
             var panel = Instantiate(panelPrefab, _rectTransform);
             if (!panel.TryGetComponent(out Panel panelComponent))
             {
@@ -58,9 +53,9 @@ namespace Managers
                 Debug.LogError("Missing Panel Component from instantiated panel prefab of type " + panelType);
                 return false;
             }
-            
+
             _panels[panelType] = panel;
-            panelComponent.Initialize(panelType/*, _uiCamera*/);
+            panelComponent.Initialize(panelType /*, _uiCamera*/);
             Utilities.Utilities.AddUniqueToList(ref _openedPanelsOrder, panelType);
             SetFocusTo(panelType);
             return true;
@@ -68,21 +63,18 @@ namespace Managers
 
         public void UnloadPanel(PanelType panelType)
         {
-            if (! _panels.TryGetValue(panelType, out GameObject panel))
-            {
-                return;
-            }
+            if (!_panels.TryGetValue(panelType, out var panel)) return;
 
             Destroy(panel);
             _panels.Remove(panelType);
             _openedPanelsOrder.Remove(panelType);
-            
+
             if (panelType == PanelOnFocus)
             {
                 // Set focus to the previous panel (if available) when closing the current one
                 if (_openedPanelsOrder.Count > 0)
                 {
-                    int lastIndex = _openedPanelsOrder.Count - 1;
+                    var lastIndex = _openedPanelsOrder.Count - 1;
                     SetFocusTo(_openedPanelsOrder[lastIndex]);
                 }
                 else
@@ -95,22 +87,23 @@ namespace Managers
         public void UnloadAll()
         {
             if (_panels.Count == 0) return;
-            
+
             foreach (var panelType in _panels)
             {
                 Destroy(panelType.Value);
                 _openedPanelsOrder.Remove(panelType.Key);
             }
+
             _panels.Clear();
         }
-        
+
         public bool ShowConfirmPanel(string message, Action onConfirmAction, Action onCancelAction)
         {
-            PanelType confirmPanelType = PanelType.Confirm;
-            bool success = LoadPanel(confirmPanelType);
+            var confirmPanelType = PanelType.Confirm;
+            var success = LoadPanel(confirmPanelType);
             if (!success) return false;
-            
-            ConfirmPanel confirmPanel = _panels[confirmPanelType].GetComponent<ConfirmPanel>();
+
+            var confirmPanel = _panels[confirmPanelType].GetComponent<ConfirmPanel>();
             confirmPanel.Setup(message, onConfirmAction, onCancelAction);
             return true;
         }

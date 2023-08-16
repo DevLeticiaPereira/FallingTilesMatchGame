@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
+using Utilities;
 
 namespace Grid.TileStates
 {
     public class WaitingState : TileState
     {
-        private GridManager _gridManager;
-        public WaitingState(Tile tileOwner, StateMachine<TileState> tileStateMachine, GridManager gridManager) : base(tileOwner,
+        private readonly GridManager _gridManager;
+
+        public WaitingState(Tile tileOwner, StateMachine<TileState> tileStateMachine, GridManager gridManager) : base(
+            tileOwner,
             tileStateMachine)
         {
             _gridManager = gridManager;
@@ -21,18 +23,17 @@ namespace Grid.TileStates
 
         private void OnEventPlacedTileAtGridPosition(Guid gridID, HashSet<Tile> tilesToPlaceInfo)
         {
-            if (_gridManager.GridID != gridID || !tilesToPlaceInfo.Contains(TileOwner))
-            {
-                return;
-            }
-            
-            TileOwner.transform.position = Utilities.GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, TileOwner.TemporaryGridPosition.Value);
-            
+            if (_gridManager.GridID != gridID || !tilesToPlaceInfo.Contains(TileOwner)) return;
+
+            TileOwner.transform.position =
+                GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, TileOwner.TemporaryGridPosition.Value);
+
             if (TileOwner.IsRoot)
             {
                 TileOwner.TileStateMachine.ChangeState(TileOwner.FallingRootTileState);
                 return;
             }
+
             TileOwner.TileStateMachine.ChangeState(TileOwner.FallingTileChildState);
         }
 

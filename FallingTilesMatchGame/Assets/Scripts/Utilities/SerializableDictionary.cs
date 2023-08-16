@@ -1,23 +1,21 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 [Serializable]
 public class SerializableDictionary<TKey, TValue> : ISerializationCallbackReceiver
 {
-    [SerializeField]
-    private List<TKey> keys = new List<TKey>();
-    
-    [SerializeField]
-    private List<TValue> values = new List<TValue>();
-    
-    private Dictionary<TKey, TValue> dictionary = new Dictionary<TKey, TValue>();
+    [SerializeField] private List<TKey> keys = new();
+
+    [SerializeField] private List<TValue> values = new();
+
+    private Dictionary<TKey, TValue> dictionary = new();
 
     public void OnBeforeSerialize()
     {
         keys.Clear();
         values.Clear();
-        
+
         foreach (var kvp in dictionary)
         {
             keys.Add(kvp.Key);
@@ -28,17 +26,14 @@ public class SerializableDictionary<TKey, TValue> : ISerializationCallbackReceiv
     public void OnAfterDeserialize()
     {
         dictionary.Clear();
-        
+
         if (keys.Count != values.Count)
         {
             Debug.LogError("Keys and values count mismatch in SerializableDictionary.");
             return;
         }
 
-        for (int i = 0; i < keys.Count; i++)
-        {
-            dictionary[keys[i]] = values[i];
-        }
+        for (var i = 0; i < keys.Count; i++) dictionary[keys[i]] = values[i];
     }
 
     public Dictionary<TKey, TValue> ToDictionary()

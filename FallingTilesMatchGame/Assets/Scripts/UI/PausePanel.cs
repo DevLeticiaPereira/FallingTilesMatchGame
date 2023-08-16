@@ -1,8 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using Managers;
-using UnityEngine;
-
 namespace UI
 {
     public class PausePanel : Panel
@@ -18,4 +13,3 @@ namespace UI
         }
     }
 }
-

@@ -1,12 +1,12 @@
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 
 [CustomEditor(typeof(GridSetup))]
 public class GridManagerEditor : Editor
 {
-    SerializedProperty _gridSetupDataProp;
+    private SerializedProperty _gridSetupDataProp;
 
-    void OnEnable()
+    private void OnEnable()
     {
         _gridSetupDataProp = serializedObject.FindProperty("_gridSetupData");
     }
@@ -17,12 +17,9 @@ public class GridManagerEditor : Editor
 
         serializedObject.Update();
 
-        GridSetup gridSetupManager = (GridSetup)target;
+        var gridSetupManager = (GridSetup)target;
 
-        if (GUILayout.Button("Generate Grid"))
-        {
-            gridSetupManager.GenerateGrid();
-        }
+        if (GUILayout.Button("Generate Grid")) gridSetupManager.GenerateGrid();
 
         serializedObject.ApplyModifiedProperties();
     }

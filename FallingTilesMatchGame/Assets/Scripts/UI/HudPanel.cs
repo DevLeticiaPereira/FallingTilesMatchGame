@@ -1,7 +1,5 @@
-using System;
 using TMPro;
 using UnityEngine;
-using Managers;
 
 namespace UI
 {
@@ -16,12 +14,12 @@ namespace UI
         {
             _endGameWindow.SetActive(active);
         }
-    
+
         public void LoadMainMenu()
         {
             GameManager.Instance.ExitGame();
         }
-    
+
         public void LoadPause()
         {
             GameManager.Instance.PauseGame(true);
@@ -31,11 +29,10 @@ namespace UI
         {
             _scoreText.text = newScore.ToString();
         }
-    
+
         private void OnHighScoreChanged(int highScore)
         {
             _highScoreText.text = highScore.ToString();
         }
     }
 }
-

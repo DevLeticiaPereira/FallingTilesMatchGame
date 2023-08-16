@@ -49,8 +49,8 @@ public partial class @TouchAction: IInputActionCollection2, IDisposable
                     ""name"": ""Accelerate"",
                     ""type"": ""Value"",
                     ""id"": ""602d686d-2830-4dc6-807a-3535095839d4"",
-                    ""expectedControlType"": ""Axis"",
-                    ""processors"": """",
+                    ""expectedControlType"": ""Delta"",
+                    ""processors"": ""NormalizeVector2"",
                     ""interactions"": """",
                     ""initialStateCheck"": true
                 }
@@ -80,8 +80,8 @@ public partial class @TouchAction: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""49bc3cee-7eb4-405a-9242-d7a861519650"",
-                    ""path"": ""<Touchscreen>/primaryTouch/delta/down"",
+                    ""id"": ""4fcbb761-e716-4caa-8c21-7f5330f54061"",
+                    ""path"": ""<Touchscreen>/delta/down"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",

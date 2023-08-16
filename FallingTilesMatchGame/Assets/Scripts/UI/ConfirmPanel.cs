@@ -7,8 +7,8 @@ namespace UI
     public class ConfirmPanel : Panel
     {
         [SerializeField] private TMP_Text _confirmMessage;
-        private Action _onConfirmAction;
         private Action _onCancelAction;
+        private Action _onConfirmAction;
 
         public void Setup(string message, Action onConfirmAction, Action onCancelAction)
         {
@@ -22,6 +22,7 @@ namespace UI
             _onConfirmAction?.Invoke();
             Unload();
         }
+
         public void Cancel()
         {
             _onCancelAction?.Invoke();

@@ -4,20 +4,20 @@ namespace Grid.TileStates
 {
     public class TileState : BaseState
     {
+        protected float _stateTimer;
 
         protected StateMachine<TileState> _tileStateMachine;
-        public Tile TileOwner { get; private set; }
-        protected float _stateTimer;
 
         public TileState(Tile tileOwner, StateMachine<TileState> tileStateMachine)
         {
-            this.TileOwner = tileOwner;
-            this._tileStateMachine = tileStateMachine;
+            TileOwner = tileOwner;
+            _tileStateMachine = tileStateMachine;
         }
+
+        public Tile TileOwner { get; }
 
         public override void Enter()
         {
-            
         }
 
         public override void Update()
@@ -27,7 +27,6 @@ namespace Grid.TileStates
 
         public override void Exit()
         {
-
         }
     }
 }

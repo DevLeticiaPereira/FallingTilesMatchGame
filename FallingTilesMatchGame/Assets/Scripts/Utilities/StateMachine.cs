@@ -1,7 +1,4 @@
-using System;
-using UnityEngine;
-
-public class StateMachine<T> where T : BaseState 
+public class StateMachine<T> where T : BaseState
 {
     //public static event Action<T> StateChanged;
     public T CurrentState { get; private set; }
@@ -14,13 +11,13 @@ public class StateMachine<T> where T : BaseState
 
     public bool ChangeState(T newState)
     {
-        if(newState == CurrentState)
+        if (newState == CurrentState)
             return false;
-       
+
         CurrentState.Exit();
         CurrentState = newState;
         CurrentState.Enter();
-        
+
         //StateChanged?.Invoke(CurrenState);
         return true;
     }

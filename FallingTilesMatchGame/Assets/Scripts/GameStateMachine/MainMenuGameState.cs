@@ -1,11 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using Managers;
 
 public class MainMenuGameState : GameState
 {
-    public MainMenuGameState(GameManager gameManager,StateMachine<GameState> gameStateMachine) : base(gameManager, gameStateMachine) { }
+    public MainMenuGameState(GameManager gameManager, StateMachine<GameState> gameStateMachine) : base(gameManager,
+        gameStateMachine)
+    {
+    }
 
     public override void Enter()
     {

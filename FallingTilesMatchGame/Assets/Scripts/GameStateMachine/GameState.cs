@@ -2,19 +2,18 @@ using UnityEngine;
 
 public class GameState : BaseState
 {
-    protected StateMachine<GameState> _gameStateMachine;
     protected GameManager _gameManager;
+    protected StateMachine<GameState> _gameStateMachine;
     protected float _stateTimer;
-    
+
     public GameState(GameManager gameManager, StateMachine<GameState> gameStateMachine)
     {
-        this._gameManager = gameManager;
-        this._gameStateMachine = gameStateMachine;
+        _gameManager = gameManager;
+        _gameStateMachine = gameStateMachine;
     }
 
     public override void Enter()
     {
-        
     }
 
     public override void Update()
@@ -24,6 +23,5 @@ public class GameState : BaseState
 
     public override void Exit()
     {
-        
     }
 }

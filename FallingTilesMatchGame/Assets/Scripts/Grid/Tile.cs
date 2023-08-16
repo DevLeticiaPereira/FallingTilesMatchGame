@@ -1,32 +1,48 @@
 using System;
 using System.Collections;
-using UnityEngine;
 using Grid.TileStates;
+using UnityEngine;
 using Utilities;
 
 namespace Grid
 {
     public class Tile : MonoBehaviour
     {
+        #region EventsCallback
+
+        private void OnGridGameOver(Guid gridID)
+        {
+            if (gridID != _gridManager.GridID) return;
+            TileStateMachine.ChangeState(GridGameOverTileState);
+        }
+
+        #endregion
+
         #region Serialized Fields
+
         [SerializeField] private SpriteRenderer _tileSpriteRenderer;
         [SerializeField] private Animation _animationComponent;
+
         #endregion
 
         #region Public Variables
+
         public TileData Data { get; private set; }
         public Vector2Int? GridPosition { get; private set; }
         public Vector2Int? TemporaryGridPosition { get; private set; }
         public bool IsRoot { get; private set; }
-        
+
         public Tile BeginPairTile { get; private set; }
+
         #endregion
 
         #region Private Variable
+
         private GridManager _gridManager;
         private Tile _rootPair;
+
         #endregion
-        
+
         #region States
 
         public StateMachine<TileState> TileStateMachine { get; private set; }
@@ -42,27 +58,33 @@ namespace Grid
         #endregion
 
         #region MonoBehavior
+
         private void OnEnable()
         {
             EventManager.EventGridGameOver += OnGridGameOver;
         }
+
         private void OnDisable()
         {
             EventManager.EventGridGameOver -= OnGridGameOver;
         }
+
         private void Update()
         {
             TileStateMachine.CurrentState.Update();
         }
+
         #endregion
 
         #region Initialize and Destroy
-        public void InitializeTile(GridManager gridManager, TileData tileData, Vector2Int initialGridPosition, bool isRoot)
+
+        public void InitializeTile(GridManager gridManager, TileData tileData, Vector2Int initialGridPosition,
+            bool isRoot)
         {
             //this.OwnerGridID = gridManager.GridID;
-            this.Data = tileData;
-            this.IsRoot = isRoot;
-            this._gridManager = gridManager;
+            Data = tileData;
+            IsRoot = isRoot;
+            _gridManager = gridManager;
             _tileSpriteRenderer.sprite = tileData.DefaultSprite;
             SetTemporaryGridPosition(initialGridPosition);
 
@@ -78,7 +100,7 @@ namespace Grid
 
             TileStateMachine.Initialize(WaitingTileState);
         }
-        
+
         public void SetBeginPair(Tile tile)
         {
             BeginPairTile = tile;
@@ -87,23 +109,13 @@ namespace Grid
         public void Destroy()
         {
             EventManager.InvokeEventTileDestroyed(_gridManager.GridID);
-            Destroy(this.gameObject);
+            Destroy(gameObject);
         }
 
-        #endregion
-        
-        #region EventsCallback
-        private void OnGridGameOver(Guid gridID)
-        {
-            if (gridID != _gridManager.GridID)
-            {
-                return;
-            }
-            TileStateMachine.ChangeState(GridGameOverTileState);
-        }
         #endregion
 
         #region Grid Related
+
         public void SetGridPosition(Vector2Int gridPosition)
         {
             GridPosition = gridPosition;
@@ -111,41 +123,21 @@ namespace Grid
             //     transform.position = Utilities.GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, GridPosition.Value);
             TileStateMachine.ChangeState(PlacedOnGridTileState);
         }
+
         public void SetTemporaryGridPosition(Vector2Int gridPosition)
         {
             TemporaryGridPosition = gridPosition;
             GridPosition = null;
         }
 
-        public void StartToMoveHorizontal(float moveDuration, float targetHorizontalPosition)
-        {
-            StartCoroutine(MoveToHorizontal(moveDuration, targetHorizontalPosition));
-        }
-        
         public void StartToMoveGridPosition(float moveDuration, Vector2Int gridDestination)
         {
             StartCoroutine(DropTile(moveDuration, gridDestination));
         }
-        
-        private IEnumerator MoveToHorizontal(float moveDuration, float targetHorizontalPosition)
-        {
-            Vector3 initialPosition = transform.position;
-            float elapsedTime = 0;
 
-            while (elapsedTime < moveDuration)
-            {
-               float t = elapsedTime / moveDuration;
-               var target = new Vector3(targetHorizontalPosition, transform.position.y, 0);
-               transform.position = Vector3.Lerp(initialPosition, target, t);
-               elapsedTime += Time.deltaTime;
-               yield return null;
-            }
-            transform.position =  new Vector3(targetHorizontalPosition, transform.position.y, 0);
-        }
-        
         private IEnumerator DropTile(float moveDuration, Vector2Int gridDestination)
         {
-            Vector3 initialPosition = transform.position;
+            var initialPosition = transform.position;
             float elapsedTime = 0;
 
             var targetPosition =
@@ -153,34 +145,40 @@ namespace Grid
 
             while (elapsedTime < moveDuration)
             {
-                float t = elapsedTime / moveDuration;
+                var t = elapsedTime / moveDuration;
                 transform.position = Vector3.Lerp(initialPosition, targetPosition, t);
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
-            transform.position =  targetPosition;
+
+            transform.position = targetPosition;
             EventManager.InvokeDroppedTileReachedGrid(_gridManager.GridID, gridDestination, this);
         }
-        
+
         #endregion
-        
+
         #region Sprites and Animations
+
         public void SetFallingRootSprite()
         {
             _tileSpriteRenderer.sprite = Data.RootTileSprite;
         }
+
         public void SetDefaultSprite()
         {
             _tileSpriteRenderer.sprite = Data.DefaultSprite;
         }
+
         public void UpdateTileSpriteWithConnections(TileData.TileConnections connections)
         {
             _tileSpriteRenderer.sprite = Data.GetSpriteForConnection(connections);
         }
+
         public void PlayDeathAnimation()
         {
             //_animationComponent.Play(Data.DeathAnimation.name.ToString());
         }
+
         #endregion
     }
 }

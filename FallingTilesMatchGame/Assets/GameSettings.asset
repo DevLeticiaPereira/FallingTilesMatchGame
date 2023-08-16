@@ -22,9 +22,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fb630e4a835fe4049b1b114d93986568, type: 2}
   - {fileID: 11400000, guid: 0a4bbb9ef7cf6ac45bd3bb907cfc2474, type: 2}
   _defaultTileFallSpeed: 3
-  _boostedTileFallSpeed: 5
-  _singleTileFallSpeed: 4
-  moveTimeBetweenColumns: 0.1
+  _boostedTileFallSpeed: 8
+  _singleTileFallSpeed: 10
+  moveTimeBetweenColumns: 0.2
   _endGameTilesFallingSpeed: 10
   _droppingMoveDuration: 0.2
   _scoreData: {fileID: 11400000, guid: 4c8906ee56fb5414fbdcc6e20a2f9183, type: 2}

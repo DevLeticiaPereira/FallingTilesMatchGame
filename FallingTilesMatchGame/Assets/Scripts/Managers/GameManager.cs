@@ -130,8 +130,6 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
-        ;
-
         UIManager.Instance.UnloadAll();
         NumberOfPlayers = numberOfPlayers;
         SceneManager.LoadScene(sceneName);

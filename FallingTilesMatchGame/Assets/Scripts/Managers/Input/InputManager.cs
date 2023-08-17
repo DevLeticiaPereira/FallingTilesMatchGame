@@ -21,8 +21,8 @@ public class InputManager : Singleton<InputManager>
     private InputAction _moveInputAction;
     private bool _movingHorizontal;
 
-    //[SerializeField]
-    //private float _moveDistanceThreshold  = 5.0f;
+    [SerializeField]
+    private float _moveDistanceThreshold  = 150.0f;
 
     private PlayerInput _playerInput;
     private InputAction _singleTouchInputAction;
@@ -89,7 +89,7 @@ public class InputManager : Singleton<InputManager>
         var touchPhase = Touchscreen.current.primaryTouch.phase.ReadValue();
         var currentTouchPos = context.ReadValue<Vector2>();
 
-        if (touchPhase == TouchPhase.Ended && _draggingDown)
+        if (touchPhase is TouchPhase.Ended or TouchPhase.Canceled && _draggingDown)
         {
             EventManager.InvokeAccelerate(false);
             _draggingDown = false;
@@ -104,20 +104,20 @@ public class InputManager : Singleton<InputManager>
             return;
         }
 
-        // // Calculate the distance moved since the last frame
-        // float distanceMoved = Vector2.Distance(currentTouchPos, _touchLastPosition);
-        // // Check if the distance moved is greater than the threshold to send move action
-        // if (distanceMoved < _moveDistanceThreshold)
-        // {
-        // 	return;
-        // }
-        //
-        if (_movingHorizontal)
+        // Calculate the distance moved since the last frame
+        float distanceMoved = Vector2.Distance(currentTouchPos, _touchLastPosition);
+        // Check if the distance moved is greater than the threshold to send move action
+        if (distanceMoved < _moveDistanceThreshold)
+        {
+        	return;
+        }
+        
+        if (_movingHorizontal || _draggingDown)
         {
             return;
         }
         
-        var direction = _touchLastPosition - currentTouchPos;
+        var direction =  currentTouchPos -_touchLastPosition;
         var dragDirection = GetDragDirection(direction);
         if (dragDirection is DragDirection.Left or DragDirection.Right)
         {
@@ -125,7 +125,7 @@ public class InputManager : Singleton<InputManager>
             _movingHorizontal = true;
             StartCoroutine(HorizontalMovementCooldown());
         }
-        else if (dragDirection == DragDirection.Down || !_draggingDown)
+        else if (dragDirection == DragDirection.Down && !_draggingDown)
         {
             EventManager.InvokeAccelerate(true);
             _draggingDown = true;
@@ -167,15 +167,17 @@ public class InputManager : Singleton<InputManager>
     {
         if (Mathf.Abs(value.x) > Mathf.Abs(value.y))
         {
-            if (value.x > 0) return DragDirection.Left;
+            if (value.x < 0) return DragDirection.Left;
 
-            if (value.x < 0) return DragDirection.Right;
+            if (value.x > 0) return DragDirection.Right;
         }
         else
         {
-            if (value.y < 0) return DragDirection.Down;
+            if (value.y < 0)
+            {
+                return DragDirection.Down;
+            }
         }
-
         return DragDirection.None;
     }
 

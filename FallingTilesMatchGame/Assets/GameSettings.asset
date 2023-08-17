@@ -24,7 +24,7 @@ MonoBehaviour:
   _defaultTileFallSpeed: 3
   _boostedTileFallSpeed: 8
   _singleTileFallSpeed: 10
-  moveTimeBetweenColumns: 0.2
+  moveTimeBetweenColumns: 0.1
   _endGameTilesFallingSpeed: 10
   _droppingMoveDuration: 0.2
   _scoreData: {fileID: 11400000, guid: 4c8906ee56fb5414fbdcc6e20a2f9183, type: 2}

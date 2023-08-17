@@ -13,6 +13,11 @@ namespace Utilities
         }
     }
 
+    public static class TileUtilities
+    {
+        
+    }
+
     public static class GridUtilities
     {
         public static Vector2Int GetAdjacentGridPosition(Vector2Int gridPosition, TileData.TileConnections direction)

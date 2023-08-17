@@ -86,6 +86,8 @@ public class FallingChildState : TileState
 
     private void Rotate()
     {
+        if(_tileReachedGrid) return;
+        
         var nextRotationDirection = GetNexRotateDirection();
         if (nextRotationDirection == TileData.TileConnections.None) return;
 

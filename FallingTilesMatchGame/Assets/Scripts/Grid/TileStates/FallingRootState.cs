@@ -87,6 +87,7 @@ namespace Grid.TileStates
         private void HandleTileReachedGrid()
         {
             _tileReachedGrid = true;
+            TileOwner.StopCoroutine("MoveToHorizontal");
             TileOwner.transform.SetParent(_gridManager.transform);
             TileOwner.transform.position = _targetWorldPosition;
             EventManager.InvokeTileReachedGrid(_gridManager.GridID, TileOwner.TemporaryGridPosition.Value, TileOwner);
@@ -167,6 +168,8 @@ namespace Grid.TileStates
 
         private void Accelerate(bool active)
         {
+            if (_tileReachedGrid) return;
+            
             if (active)
                 CurrentFallSpeed = _boostedFallSpeed;
             else

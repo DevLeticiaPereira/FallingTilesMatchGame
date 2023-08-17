@@ -403,10 +403,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7546292259723055886, guid: 5c9bffc832303c24d94a42efecd0e61a, type: 3}
-      propertyPath: _moveDistanceThreshold
-      value: 100
-      objectReference: {fileID: 0}
     - target: {fileID: 8920472730053368983, guid: 5c9bffc832303c24d94a42efecd0e61a, type: 3}
       propertyPath: m_Name
       value: InputManager

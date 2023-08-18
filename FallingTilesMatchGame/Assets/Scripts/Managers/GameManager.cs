@@ -37,20 +37,7 @@ public class GameManager : Singleton<GameManager>
 
     #region Private Functions
 
-    public void LoadMainMenu()
-    {
-        if (!Application.CanStreamedLevelBeLoaded(_mainMenuSceneName))
-        {
-            Debug.LogError($"Scene {_mainMenuSceneName} cannot be loaded.");
-            return;
-        }
-
-        EventManager.InvokeExitedGameplayScene();
-        UIManager.Instance.UnloadAll();
-        _gridScoreMap.Clear();
-        PlayerGrid = Guid.NewGuid();
-        SceneManager.LoadScene(_mainMenuSceneName);
-    }
+    
 
     #endregion
 
@@ -101,6 +88,21 @@ public class GameManager : Singleton<GameManager>
     }
 
     #endregion
+    
+    public void LoadMainMenu()
+    {
+        if (!Application.CanStreamedLevelBeLoaded(_mainMenuSceneName))
+        {
+            Debug.LogError($"Scene {_mainMenuSceneName} cannot be loaded.");
+            return;
+        }
+
+        EventManager.InvokeExitedGameplayScene();
+        UIManager.Instance.UnloadAll();
+        _gridScoreMap.Clear();
+        PlayerGrid = Guid.NewGuid();
+        SceneManager.LoadScene(_mainMenuSceneName);
+    }
 
     #region Public Functions
 

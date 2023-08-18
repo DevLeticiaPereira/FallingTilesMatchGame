@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -43,12 +44,15 @@ public class InputManager : Singleton<InputManager>
     protected override void Awake()
     {
         base.Awake();
-
-        PlayerInputEnabled = false;
-        _horizontalMovementCooldown = GameManager.Instance.GameSettings.MoveTimeBetweenColumns;
         _playerInput = GetComponent<PlayerInput>();
         _singleTouchInputAction = _playerInput.actions.FindAction("SingleTouch");
         _moveInputAction = _playerInput.actions.FindAction("Move");
+    }
+
+    private void Start()
+    {
+        PlayerInputEnabled = false;
+        _horizontalMovementCooldown = GameManager.Instance.GameSettings.MoveTimeBetweenColumns;
     }
 
     private void OnEnable()

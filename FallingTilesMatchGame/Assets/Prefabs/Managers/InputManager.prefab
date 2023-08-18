@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99f62d39d16026e43ba36d18f1fe42bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _moveDistanceThreshold: 100
+  _moveDistanceThreshold: 70
 --- !u!114 &8605170343924813933
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -105,14 +105,14 @@ public class InputManager : Singleton<InputManager>
         }
 
         // Calculate the distance moved since the last frame
-        float distanceMoved = Vector2.Distance(currentTouchPos, _touchLastPosition);
+        var distanceMoved = Vector2.Distance(currentTouchPos, _touchLastPosition);
         // Check if the distance moved is greater than the threshold to send move action
         if (distanceMoved < _moveDistanceThreshold)
         {
         	return;
         }
         
-        if (_movingHorizontal || _draggingDown)
+        if (_movingHorizontal)
         {
             return;
         }
@@ -121,8 +121,10 @@ public class InputManager : Singleton<InputManager>
         var dragDirection = GetDragDirection(direction);
         if (dragDirection is DragDirection.Left or DragDirection.Right)
         {
-            EventManager.InvokeMoveHorizontal(dragDirection);
+            _draggingDown = false;
+            EventManager.InvokeAccelerate(false);
             _movingHorizontal = true;
+            EventManager.InvokeMoveHorizontal(dragDirection);
             StartCoroutine(HorizontalMovementCooldown());
         }
         else if (dragDirection == DragDirection.Down && !_draggingDown)

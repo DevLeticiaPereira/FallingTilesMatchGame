@@ -14,7 +14,6 @@ namespace Grid.TileStates
         private Vector2 _gridCellDimensions;
         private readonly GridManager _gridManager;
         private Vector2 _inicialWorldPosition;
-        private readonly bool _isPlayer;
         private bool _isRotating;
         private readonly float _moveTimeBetweenColumns;
         private Vector2 _targetWorldPosition;
@@ -24,7 +23,6 @@ namespace Grid.TileStates
             GridManager gridManager) : base(tileOwner,
             tileStateMachine)
         {
-            _isPlayer = gridManager.IsPlayer;
             _gridManager = gridManager;
             var _gameSettings = GameManager.Instance.GameSettings;
             _defaultFallSpeed = _gameSettings.DefaultTileFallSpeed;
@@ -37,13 +35,11 @@ namespace Grid.TileStates
         public override void Enter()
         {
             base.Enter();
-            if (_isPlayer)
-            {
-                EventManager.EventMoveHorizontal += MoveHorizontal;
-                EventManager.EventAccelerate += Accelerate;
-            }
-
+           
+            EventManager.EventMoveHorizontal += MoveHorizontal;
+            EventManager.EventAccelerate += Accelerate;
             EventManager.EventTileReachedGrid += TileReachedGrid;
+            
             _beginPair = TileOwner.BeginPairTile;
             TileOwner.SetFallingRootSprite();
             CurrentFallSpeed = _defaultFallSpeed;
@@ -55,12 +51,9 @@ namespace Grid.TileStates
         public override void Exit()
         {
             base.Exit();
-            if (_isPlayer)
-            {
-                EventManager.EventMoveHorizontal -= MoveHorizontal;
-                EventManager.EventAccelerate -= Accelerate;
-            }
-
+            
+            EventManager.EventMoveHorizontal -= MoveHorizontal;
+            EventManager.EventAccelerate -= Accelerate;
             EventManager.EventTileReachedGrid -= TileReachedGrid;
         }
 
@@ -167,8 +160,9 @@ namespace Grid.TileStates
             }
         }
 
-        private void Accelerate(bool active)
+        private void Accelerate(Guid gridID, bool active)
         {
+            if(_gridManager.GridID != gridID) return;
             if (_tileReachedGrid) return;
             
             if (active)
@@ -177,9 +171,9 @@ namespace Grid.TileStates
                 CurrentFallSpeed = _defaultFallSpeed;
         }
 
-        private void MoveHorizontal(InputManager.DragDirection dragDirection)
+        private void MoveHorizontal(Guid gridID, InputManager.DragDirection dragDirection)
         {
-            if (!_isPlayer) return;
+            if(_gridManager.GridID != gridID) return;
             if (_tileReachedGrid) return;
 
             var newTargetGridPosition =

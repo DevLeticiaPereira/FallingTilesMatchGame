@@ -7,9 +7,9 @@ public static class EventManager
 {
     #region INPUTS
 
-    public static event Action EventRotate;
-    public static event Action<InputManager.DragDirection> EventMoveHorizontal;
-    public static event Action<bool> EventAccelerate;
+    public static event Action<Guid> EventRotate;
+    public static event Action<Guid, InputManager.DragDirection> EventMoveHorizontal;
+    public static event Action<Guid, bool> EventAccelerate;
 
     #endregion INPUTS
 
@@ -17,7 +17,7 @@ public static class EventManager
 
     public static event Action<Guid, Vector2Int, Tile> EventTileReachedGrid;
     public static event Action<Guid, Vector2Int, Tile> EventDroppedTileReachedGrid;
-    public static event Action<Guid, HashSet<Tile>> EventPlacedTileAtGridPosition;
+    public static event Action<Guid, HashSet<Tile>> EventPlacedTileAtGridStartPoint;
     public static event Action<Guid, HashSet<Vector2Int>> EventTilesAddedToGrid;
     public static event Action<Guid, Dictionary<Vector2Int, Vector2Int>> EventTilesDroppedFromGrid;
     public static event Action<Guid, HashSet<Vector2Int>> EventTilesMatched;
@@ -49,19 +49,19 @@ public static class EventManager
         EventMultiPlayerGameMode?.Invoke();
     }
 
-    public static void InvokeMoveHorizontal(InputManager.DragDirection dragDirection)
+    public static void InvokeMoveHorizontal(Guid gridID, InputManager.DragDirection dragDirection)
     {
-        EventMoveHorizontal?.Invoke(dragDirection);
+        EventMoveHorizontal?.Invoke(gridID, dragDirection);
     }
 
-    public static void InvokeAccelerate(bool active)
+    public static void InvokeAccelerate(Guid gridID, bool active)
     {
-        EventAccelerate?.Invoke(active);
+        EventAccelerate?.Invoke(gridID, active);
     }
 
-    public static void InvokeRotate()
+    public static void InvokeRotate(Guid gridID)
     {
-        EventRotate?.Invoke();
+        EventRotate?.Invoke(gridID);
     }
 
     public static void InvokeTileReachedGrid(Guid gridID, Vector2Int gridPosition, Tile tile)
@@ -76,7 +76,7 @@ public static class EventManager
 
     public static void InvokePlacedTileAtGridStartPoint(Guid gridID, HashSet<Tile> tilesMoved)
     {
-        EventPlacedTileAtGridPosition?.Invoke(gridID, tilesMoved);
+        EventPlacedTileAtGridStartPoint?.Invoke(gridID, tilesMoved);
     }
 
     public static void InvokeTilesMatched(Guid gridID, HashSet<Vector2Int> gridPositions)
@@ -134,7 +134,7 @@ public static class EventManager
 
         var delegates = EventRotate?.GetInvocationList();
         foreach (var del in delegates)
-            if (del is Action listener)
+            if (del is Action<Guid> listener)
                 EventRotate -= listener;
     }
 
@@ -143,7 +143,7 @@ public static class EventManager
         if (EventMoveHorizontal == null) return;
         var delegates = EventMoveHorizontal?.GetInvocationList();
         foreach (var del in delegates)
-            if (del is Action<InputManager.DragDirection> listener)
+            if (del is Action<Guid, InputManager.DragDirection> listener)
                 EventMoveHorizontal -= listener;
     }
 

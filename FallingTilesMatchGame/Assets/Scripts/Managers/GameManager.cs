@@ -140,6 +140,7 @@ public class GameManager : Singleton<GameManager>
         {
             PlayerGrid = gridID;
             GridScoreMap[PlayerGrid.Value] = 0;
+            InputManager.Instance.SetPlayerGridID(PlayerGrid.Value);
             return true;
         }
         if(!isPlayer)

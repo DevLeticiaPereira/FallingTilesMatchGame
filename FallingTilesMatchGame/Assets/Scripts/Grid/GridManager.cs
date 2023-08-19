@@ -48,6 +48,7 @@ namespace Grid
         private Vector2Int _startGridPositionTile1;
         private Vector2Int _startGridPositionTile2;
         private GameObject _spawnMarker;
+        private AIController _aiControllerComponent;
 
         public bool IsPlayer => _isPlayer;
 
@@ -77,6 +78,11 @@ namespace Grid
         {
             InitializeGameSettings();
             SignupGridToGame();
+            if (!_isPlayer)
+            {
+                _aiControllerComponent = gameObject.AddComponent<AIController>();
+                _aiControllerComponent.Initialize(this);
+            }
             SetupGridOwnerName();
             LoadTilesSpawnProbability();
             Grid = GridUtilities.GenerateGridCells(transform.position, GridInfo);

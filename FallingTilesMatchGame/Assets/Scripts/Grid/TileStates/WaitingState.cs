@@ -18,10 +18,10 @@ namespace Grid.TileStates
         public override void Enter()
         {
             base.Enter();
-            EventManager.EventPlacedTileAtGridPosition += OnEventPlacedTileAtGridPosition;
+            EventManager.EventPlacedTileAtGridStartPoint += OnEventPlacedTileAtGridStartPoint;
         }
 
-        private void OnEventPlacedTileAtGridPosition(Guid gridID, HashSet<Tile> tilesToPlaceInfo)
+        private void OnEventPlacedTileAtGridStartPoint(Guid gridID, HashSet<Tile> tilesToPlaceInfo)
         {
             if (_gridManager.GridID != gridID || !tilesToPlaceInfo.Contains(TileOwner)) return;
 
@@ -40,7 +40,7 @@ namespace Grid.TileStates
         public override void Exit()
         {
             base.Exit();
-            EventManager.EventPlacedTileAtGridPosition -= OnEventPlacedTileAtGridPosition;
+            EventManager.EventPlacedTileAtGridStartPoint -= OnEventPlacedTileAtGridStartPoint;
         }
     }
 }

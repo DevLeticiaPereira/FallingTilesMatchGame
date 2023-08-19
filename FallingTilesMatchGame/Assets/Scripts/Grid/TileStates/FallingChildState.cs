@@ -7,17 +7,15 @@ using Utilities;
 public class FallingChildState : TileState
 {
     private Tile _beginPair;
-    public TileData.TileConnections _currentPositionRelatedToTileRoot = TileData.TileConnections.Up;
+    public TileData.TileConnections CurrentPositionRelatedToTileRoot { get; private set; } = TileData.TileConnections.Up;
     private Vector2 _gridCellDimensions;
     private readonly GridManager _gridManager;
-    private readonly bool _isPlayer;
     private Vector2 _targetWorldPosition;
     private bool _tileReachedGrid;
 
     public FallingChildState(Tile tileOwner, StateMachine<TileState> tileStateMachine, GridManager gridManager) : base(
         tileOwner, tileStateMachine)
     {
-        _isPlayer = gridManager.IsPlayer;
         _gridManager = gridManager;
     }
 
@@ -28,7 +26,7 @@ public class FallingChildState : TileState
         _gridCellDimensions = _gridManager.GridInfo.BlockDimensions;
         if (!TileOwner.TemporaryGridPosition.HasValue) Debug.Log("dont have value");
 
-        if (_isPlayer) EventManager.EventRotate += Rotate;
+        EventManager.EventRotate += Rotate;
         EventManager.EventTileReachedGrid += TileReachedGrid;
         UpdateGridTarget();
     }
@@ -36,7 +34,7 @@ public class FallingChildState : TileState
     public override void Exit()
     {
         base.Exit();
-        if (_isPlayer) EventManager.EventRotate -= Rotate;
+        EventManager.EventRotate -= Rotate;
         EventManager.EventTileReachedGrid -= TileReachedGrid;
     }
 
@@ -85,8 +83,9 @@ public class FallingChildState : TileState
         return false;
     }
 
-    private void Rotate()
+    private void Rotate(Guid gridID)
     {
+        if(gridID != _gridManager.GridID) return;
         if(_tileReachedGrid) return;
         
         var nextRotationDirection = GetNexRotateDirection();
@@ -95,7 +94,7 @@ public class FallingChildState : TileState
         var possibleGridPosition =
             GridUtilities.GetAdjacentGridPosition(_beginPair.TemporaryGridPosition.Value, nextRotationDirection);
         if (!GridUtilities.IsGridPositionAvailable(_gridManager.Grid, possibleGridPosition)) return;
-        _currentPositionRelatedToTileRoot = nextRotationDirection;
+        CurrentPositionRelatedToTileRoot = nextRotationDirection;
 
         var nextRotatePosition = new Vector3();
         switch (nextRotationDirection)
@@ -146,7 +145,7 @@ public class FallingChildState : TileState
 
     private TileData.TileConnections GetNexRotateDirection()
     {
-        return _currentPositionRelatedToTileRoot switch
+        return CurrentPositionRelatedToTileRoot switch
         {
             TileData.TileConnections.Right => TileData.TileConnections.Down,
             TileData.TileConnections.Left => TileData.TileConnections.Up,

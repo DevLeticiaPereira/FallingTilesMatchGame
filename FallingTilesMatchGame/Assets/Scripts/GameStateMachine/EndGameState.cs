@@ -1,7 +1,7 @@
+using Managers;
+
 public class EndGameState : GameState
 {
-    private readonly float _endGameScreenTime = 3.0f;
-
     public EndGameState(GameManager gameManager, StateMachine<GameState> gameStateMachine) : base(gameManager,
         gameStateMachine)
     {
@@ -10,16 +10,7 @@ public class EndGameState : GameState
     public override void Enter()
     {
         base.Enter();
-        _stateTimer = _endGameScreenTime;
-    }
-
-    public override void Update()
-    {
-        base.Update();
-        if (_stateTimer <= 0) _gameManager.LoadMainMenu();
-    }
-
-    public override void Exit()
-    {
+        string finalGameMessage = _gameManager.GameMode.GetGameEndMessage();
+        UIManager.Instance.ShowConfirmPanel(finalGameMessage, () => GameManager.Instance.LoadMainMenu(),null);
     }
 }

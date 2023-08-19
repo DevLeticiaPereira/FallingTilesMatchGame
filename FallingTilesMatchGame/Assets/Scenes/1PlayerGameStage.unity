@@ -296,6 +296,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Grid
       objectReference: {fileID: 0}
+    - target: {fileID: 2811408534902764716, guid: 6d77a5c9b08fd4d49bfd06377c3768f3, type: 3}
+      propertyPath: _isPlayer
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2837789884064086378, guid: 6d77a5c9b08fd4d49bfd06377c3768f3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.69
@@ -344,6 +348,9 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 0}
     - targetCorrespondingSourceObject: {fileID: 3926676112979624056, guid: 6d77a5c9b08fd4d49bfd06377c3768f3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
+    - targetCorrespondingSourceObject: {fileID: 1245076821985692582, guid: 6d77a5c9b08fd4d49bfd06377c3768f3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 6d77a5c9b08fd4d49bfd06377c3768f3, type: 3}

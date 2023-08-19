@@ -41,6 +41,5 @@ public class SaveManager : Singleton<SaveManager>
     public class SaveData
     {
         public int SingleModeHighScore;
-        public int TwoPlayersHighScore;
     }
 }

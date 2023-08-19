@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22fd2474876036d41b16b603a5c58d91, type: 3}
+  m_Name: GridSetup2Players
+  m_EditorClassIdentifier: 
+  _rows: 16
+  _columns: 7
+  _blockDimensions: {x: 1, y: 1}
+  _blockSpaceBetween: {x: 0, y: 0}
+  _blockBackgroundPrefabType1: {fileID: 2682611721159636857, guid: b27d3bfb95f4cd64db7fb2146858f126, type: 3}
+  _blockBackgroundPrefabType2: {fileID: 5826254949729980681, guid: ea28a50dfb459fd41bc9ff2439b634e4, type: 3}
+  _tilePrefab: {fileID: 2682611721159636857, guid: 40882977ae8c26241930060a649bc5f8, type: 3}
+  _columnToSpawn: 3
+  TilesSpawnWeight:
+  - tileType: 1
+    spawnWeight: 0.31
+  - tileType: 2
+    spawnWeight: 0.469
+  - tileType: 3
+    spawnWeight: 0.615
+  - tileType: 4
+    spawnWeight: 0.447
+  - tileType: 5
+    spawnWeight: 0

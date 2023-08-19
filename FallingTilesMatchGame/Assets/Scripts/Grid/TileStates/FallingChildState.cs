@@ -10,14 +10,14 @@ public class FallingChildState : TileState
     public TileData.TileConnections _currentPositionRelatedToTileRoot = TileData.TileConnections.Up;
     private Vector2 _gridCellDimensions;
     private readonly GridManager _gridManager;
-    private readonly bool _isAiControlled;
+    private readonly bool _isPlayer;
     private Vector2 _targetWorldPosition;
     private bool _tileReachedGrid;
 
     public FallingChildState(Tile tileOwner, StateMachine<TileState> tileStateMachine, GridManager gridManager) : base(
         tileOwner, tileStateMachine)
     {
-        _isAiControlled = gridManager.IsAiControlled;
+        _isPlayer = gridManager.IsPlayer;
         _gridManager = gridManager;
     }
 
@@ -28,7 +28,7 @@ public class FallingChildState : TileState
         _gridCellDimensions = _gridManager.GridInfo.BlockDimensions;
         if (!TileOwner.TemporaryGridPosition.HasValue) Debug.Log("dont have value");
 
-        if (!_isAiControlled) EventManager.EventRotate += Rotate;
+        if (_isPlayer) EventManager.EventRotate += Rotate;
         EventManager.EventTileReachedGrid += TileReachedGrid;
         UpdateGridTarget();
     }
@@ -36,7 +36,7 @@ public class FallingChildState : TileState
     public override void Exit()
     {
         base.Exit();
-        if (!_isAiControlled) EventManager.EventRotate -= Rotate;
+        if (_isPlayer) EventManager.EventRotate -= Rotate;
         EventManager.EventTileReachedGrid -= TileReachedGrid;
     }
 
@@ -72,8 +72,9 @@ public class FallingChildState : TileState
 
     private bool TryUpdateTileTemporaryGridPosition()
     {
-        var currentGridPositionY = Mathf.CeilToInt(TileOwner.transform.position.y / _gridCellDimensions.y);
-        var currentGridPositionX = Mathf.CeilToInt(TileOwner.transform.position.x / _gridCellDimensions.x);
+        var positionRelatedToGrid = TileOwner.transform.position - _gridManager.transform.position;
+        var currentGridPositionY = Mathf.FloorToInt(positionRelatedToGrid.y / _gridCellDimensions.y);
+        var currentGridPositionX = Mathf.FloorToInt(positionRelatedToGrid.x / _gridCellDimensions.x);
         var newTemporaryGridPosition = new Vector2Int(currentGridPositionX, currentGridPositionY);
         if (newTemporaryGridPosition != TileOwner.TemporaryGridPosition.Value)
         {
@@ -133,7 +134,6 @@ public class FallingChildState : TileState
 
         if (!foundValidPos)
         {
-            Debug.Log("Cannot find Next valid position");
             return;
         }
 

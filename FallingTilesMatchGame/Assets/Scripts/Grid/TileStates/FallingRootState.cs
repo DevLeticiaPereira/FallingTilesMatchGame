@@ -14,7 +14,7 @@ namespace Grid.TileStates
         private Vector2 _gridCellDimensions;
         private readonly GridManager _gridManager;
         private Vector2 _inicialWorldPosition;
-        private readonly bool _isAiControlled;
+        private readonly bool _isPlayer;
         private bool _isRotating;
         private readonly float _moveTimeBetweenColumns;
         private Vector2 _targetWorldPosition;
@@ -24,7 +24,7 @@ namespace Grid.TileStates
             GridManager gridManager) : base(tileOwner,
             tileStateMachine)
         {
-            _isAiControlled = gridManager.IsAiControlled;
+            _isPlayer = gridManager.IsPlayer;
             _gridManager = gridManager;
             var _gameSettings = GameManager.Instance.GameSettings;
             _defaultFallSpeed = _gameSettings.DefaultTileFallSpeed;
@@ -37,7 +37,7 @@ namespace Grid.TileStates
         public override void Enter()
         {
             base.Enter();
-            if (!_isAiControlled)
+            if (_isPlayer)
             {
                 EventManager.EventMoveHorizontal += MoveHorizontal;
                 EventManager.EventAccelerate += Accelerate;
@@ -55,7 +55,7 @@ namespace Grid.TileStates
         public override void Exit()
         {
             base.Exit();
-            if (!_isAiControlled)
+            if (_isPlayer)
             {
                 EventManager.EventMoveHorizontal -= MoveHorizontal;
                 EventManager.EventAccelerate -= Accelerate;
@@ -95,8 +95,9 @@ namespace Grid.TileStates
 
         private bool TryUpdateTileTemporaryGridPosition()
         {
-            var currentGridPositionY = Mathf.CeilToInt(TileOwner.transform.position.y / _gridCellDimensions.y);
-            var currentGridPositionX = Mathf.CeilToInt(TileOwner.transform.position.x / _gridCellDimensions.x);
+            var positionRelatedToGrid = TileOwner.transform.position - _gridManager.transform.position;
+            var currentGridPositionY = Mathf.FloorToInt(positionRelatedToGrid.y / _gridCellDimensions.y);
+            var currentGridPositionX = Mathf.FloorToInt(positionRelatedToGrid.x / _gridCellDimensions.x);
             var newTemporaryGridPosition = new Vector2Int(currentGridPositionX, currentGridPositionY);
             if (newTemporaryGridPosition != TileOwner.TemporaryGridPosition.Value)
             {
@@ -178,7 +179,7 @@ namespace Grid.TileStates
 
         private void MoveHorizontal(InputManager.DragDirection dragDirection)
         {
-            if (_isAiControlled) return;
+            if (!_isPlayer) return;
             if (_tileReachedGrid) return;
 
             var newTargetGridPosition =

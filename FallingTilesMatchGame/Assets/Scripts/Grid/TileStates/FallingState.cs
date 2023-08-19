@@ -79,8 +79,9 @@ namespace Grid.TileStates
 
         private bool TryUpdateTileTemporaryGridPosition()
         {
-            var currentGridPositionY = Mathf.CeilToInt(TileOwner.transform.position.y / _gridCellDimensions.y);
-            var currentGridPositionX = Mathf.CeilToInt(TileOwner.transform.position.x / _gridCellDimensions.x);
+            var positionRelatedToGrid = TileOwner.transform.position - _gridManager.transform.position;
+            var currentGridPositionY = Mathf.FloorToInt(positionRelatedToGrid.y / _gridCellDimensions.y);
+            var currentGridPositionX = Mathf.FloorToInt(positionRelatedToGrid.x / _gridCellDimensions.x);
             var newTemporaryGridPosition = new Vector2Int(currentGridPositionX, currentGridPositionY);
             if (newTemporaryGridPosition != TileOwner.TemporaryGridPosition.Value)
             {

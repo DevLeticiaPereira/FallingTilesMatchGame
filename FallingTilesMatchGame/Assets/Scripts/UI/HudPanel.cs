@@ -1,3 +1,4 @@
+using GameModes;
 using TMPro;
 using UnityEngine;
 
@@ -5,14 +6,39 @@ namespace UI
 {
     public class HudPanel : Panel
     {
-        [SerializeField] private GameObject _endGameWindow;
-        [SerializeField] private TMP_Text _scoreText;
         [SerializeField] private TMP_Text _highScoreText;
 
-
-        public void ShowEndGameWindow(bool active)
+        protected override void OnEnable()
         {
-            _endGameWindow.SetActive(active);
+            base.OnEnable();
+            EventManager.EventUpdateHighScore += UpdateHighScore;
+            EventManager.EventMultiPlayerGameMode += SetupMultiPlayerGameMode;
+            EventManager.EventSinglePlayerGameMode += SetupSinglePlayerGameMode;
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            EventManager.EventUpdateHighScore -= UpdateHighScore;
+            EventManager.EventMultiPlayerGameMode -= SetupMultiPlayerGameMode;
+            EventManager.EventSinglePlayerGameMode -= SetupSinglePlayerGameMode;
+        }
+        
+        private void SetupSinglePlayerGameMode()
+        {
+            _highScoreText.gameObject.SetActive(true);
+            var singlePlayerGameMode = GameManager.Instance.GameMode as SinglePlayerGameMode;
+            _highScoreText.text = singlePlayerGameMode.SinglePlayerHighScore.ToString();
+        }
+
+        private void SetupMultiPlayerGameMode()
+        {
+            _highScoreText.gameObject.SetActive(false);
+        }
+
+        private void UpdateHighScore(int highScore)
+        {
+            _highScoreText.text = highScore.ToString();
         }
 
         public void LoadMainMenu()
@@ -23,16 +49,6 @@ namespace UI
         public void LoadPause()
         {
             GameManager.Instance.PauseGame(true);
-        }
-
-        private void OnScoreChanged(int newScore)
-        {
-            _scoreText.text = newScore.ToString();
-        }
-
-        private void OnHighScoreChanged(int highScore)
-        {
-            _highScoreText.text = highScore.ToString();
         }
     }
 }

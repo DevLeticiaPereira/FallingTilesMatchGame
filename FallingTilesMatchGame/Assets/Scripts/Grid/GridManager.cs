@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Serialization;
 using Utilities;
 using Random = UnityEngine.Random;
 
@@ -15,8 +18,8 @@ namespace Grid
         [SerializeField] private GridScoreManager _gridScoreManager;
         [SerializeField] private GameObject _spawnMarkerPrefab;
         [SerializeField] private List<Transform> _waitingPairSpawnPoints;
-        [SerializeField] private bool _isAiControlled;
-
+        [SerializeField] private bool _isPlayer;
+        [SerializeField] private TMP_Text _gridOwnerText;
         #endregion
 
         #region Properties
@@ -42,12 +45,11 @@ namespace Grid
         private int _numberOfTilesDropping;
         private readonly HashSet<Vector2Int> _gridPositionsToCheck = new();
         private List<Vector2Int> _gridWaitingToDropPositions = new();
-        private List<TileData> _tilesDataList;
         private Vector2Int _startGridPositionTile1;
         private Vector2Int _startGridPositionTile2;
         private GameObject _spawnMarker;
 
-        public bool IsAiControlled => _isAiControlled;
+        public bool IsPlayer => _isPlayer;
 
         #endregion
 
@@ -73,22 +75,14 @@ namespace Grid
 
         private void Awake()
         {
-            GridInfo = GameManager.Instance.GameSettings.GridSetupData;
-            _minNumberToMatch = GameManager.Instance.GameSettings.MinNumberOfTilesToMatch;
-            _tilesDataList = GameManager.Instance.GameSettings.TilesData;
-
-            foreach (var tileData in _tilesDataList)
-                if (!_tilesDataDictionary.ContainsKey(tileData.ColorTile))
-                    _tilesDataDictionary[tileData.ColorTile] = tileData;
-
-            GridID = Guid.NewGuid();
-            GameManager.Instance.SignUpGridToGame(GridID, _isAiControlled);
+            InitializeGameSettings();
+            SignupGridToGame();
+            SetupGridOwnerName();
             LoadTilesSpawnProbability();
             Grid = GridUtilities.GenerateGridCells(transform.position, GridInfo);
             SetupStartPosition();
             UpdateGridWaitingPairs();
         }
-
         #endregion
 
         #region Event callback fucntions
@@ -381,7 +375,6 @@ namespace Grid
 
             return newTileData;
         }
-
         //calculate tiles spawn probability and store it to easy access for gameplay
         private void LoadTilesSpawnProbability()
         {
@@ -414,7 +407,6 @@ namespace Grid
                 }
             }
         }
-
         //setup tiles start position on the grid and instantiate game object that marks it
         private void SetupStartPosition()
         {
@@ -423,6 +415,39 @@ namespace Grid
             var startWorldPositionTile = GridUtilities.GetGridCellWorldPosition(Grid, _startGridPositionTile1);
             _spawnMarker = Instantiate(_spawnMarkerPrefab, startWorldPositionTile, Quaternion.identity,
                 transform);
+        }
+        private void SetupGridOwnerName()
+        {
+            if (GameManager.Instance.NumberOfPlayers == 1)
+            {
+                _gridOwnerText.gameObject.SetActive(false);
+            }
+            else if (_isPlayer)
+            {
+                _gridOwnerText.text = "Player";
+            }
+            else
+            {
+                _gridOwnerText.text = "Enemy";
+            }
+        }
+        private void InitializeGameSettings()
+        {
+            GridInfo = GameManager.Instance.GameSettings.GridSetupData;
+            _minNumberToMatch = GameManager.Instance.GameSettings.MinNumberOfTilesToMatch;
+            var tilesDataList = GameManager.Instance.GameSettings.TilesData;
+            
+            foreach (var tileData in tilesDataList)
+                if (!_tilesDataDictionary.ContainsKey(tileData.ColorTile))
+                    _tilesDataDictionary[tileData.ColorTile] = tileData;
+        }
+        private void SignupGridToGame()
+        {
+            GridID = Guid.NewGuid();
+            if (!GameManager.Instance.SignUpGridToGame(GridID, _isPlayer))
+            {
+                _isPlayer = !_isPlayer;
+            }
         }
 
         #endregion

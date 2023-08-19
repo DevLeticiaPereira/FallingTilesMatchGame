@@ -18,7 +18,7 @@ namespace UI
             if (_graphicRaycaster == null) _graphicRaycaster = gameObject.AddComponent<GraphicRaycaster>();
         }
 
-        protected void OnDisable()
+        protected virtual void OnDisable()
         {
             UIManager.PanelFocusEntered -= OnPanelFocusEnter;
             UIManager.PanelFocusExited -= OnPanelFocusExit;

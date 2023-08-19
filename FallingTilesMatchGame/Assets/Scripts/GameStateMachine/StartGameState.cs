@@ -1,5 +1,6 @@
 using System;
 using Managers;
+using UnityEngine;
 
 public class StartGameState : GameState
 {
@@ -13,9 +14,9 @@ public class StartGameState : GameState
     public override void Enter()
     {
         base.Enter();
-        //Todo: remove temporary code - change from start to running
         _stateTimer = 3;
         UIManager.Instance.LoadPanel(UIManager.PanelType.Hud);
+        _gameManager.GameMode.GameStart();
     }
 
     public override void Update()

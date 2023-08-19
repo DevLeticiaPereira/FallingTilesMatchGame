@@ -12,12 +12,6 @@ public class MainMenuGameState : GameState
         base.Enter();
         UIManager.Instance.LoadPanel(UIManager.PanelType.MainMenu);
     }
-
-    public override void Update()
-    {
-        base.Update();
-    }
-
     public override void Exit()
     {
         base.Exit();

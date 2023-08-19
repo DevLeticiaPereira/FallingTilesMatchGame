@@ -28,13 +28,26 @@ public static class EventManager
 
     #region GAME GENERAL EVENTS
 
+    public static event Action EventSinglePlayerGameMode;
+    public static event Action EventMultiPlayerGameMode;
     public static event Action<Guid> EventGridGameOver;
     public static event Action<Guid, int> EventScore;
+    public static event Action<int> EventUpdateHighScore;
     public static event Action EventExitedGameplayScene;
 
     #endregion
 
     #region INVOKE FUNCTIONS
+
+    public static void InvokeEventSinglePlayerGameMode()
+    {
+        EventSinglePlayerGameMode?.Invoke();
+    }
+    
+    public static void InvokeEventMultiPlayerGameMode()
+    {
+        EventMultiPlayerGameMode?.Invoke();
+    }
 
     public static void InvokeMoveHorizontal(InputManager.DragDirection dragDirection)
     {
@@ -104,6 +117,11 @@ public static class EventManager
     public static void InvokeExitedGameplayScene()
     {
         EventExitedGameplayScene?.Invoke();
+    }
+
+    public static void InvokeEventUpdateHighScore(int highScore)
+    {
+        EventUpdateHighScore?.Invoke(highScore);
     }
 
     #endregion

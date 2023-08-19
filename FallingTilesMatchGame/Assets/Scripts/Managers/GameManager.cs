@@ -9,40 +9,14 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] private GameSettings _gameSettings;
     [SerializeField] private string _mainMenuSceneName;
     [SerializeField] private string _gameSceneSuffix;
-    [SerializeField] private string _exitGameConfirmMessage = "Do you really want to exit the game?";
-
-    //todo: make a game rules scriptable and take this out of here
-    //[SerializeField] private int _minNumberOfTilesToMatch = 4;
-
-    private readonly Dictionary<Guid, int> _gridScoreMap = new();
-    public Guid PlayerGrid { get; private set; }
-
-    public int NumberOfPlayers { get; private set; }
-
-    //public int MinNumberOfTilesToMatch => _minNumberOfTilesToMatch;
-    public GameSettings GameSettings => _gameSettings;
-
-    #region Event Subscription
-
-    private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
-    {
-        if (StateMachine.CurrentState == null) return;
-
-        if (scene.name.Contains(_gameSceneSuffix))
-            StateMachine.ChangeState(StartState);
-        else if (scene.name.Contains(_mainMenuSceneName)) StateMachine.ChangeState(MenuState);
-    }
-
-    #endregion
-
-    #region Private Functions
-
     
-
-    #endregion
-
+    public Dictionary<Guid, int> GridScoreMap { get; private set; } = new();
+    public Guid? PlayerGrid { get; private set; }
+    public int NumberOfPlayers { get; private set; }
+    public GameSettings GameSettings => _gameSettings;
+    public GameModes.IGameMode GameMode { get; private set; }
+    
     #region States
-
     public StateMachine<GameState> StateMachine { get; private set; }
     public MainMenuGameState MenuState { get; private set; }
     public StartGameState StartState { get; private set; }
@@ -51,9 +25,19 @@ public class GameManager : Singleton<GameManager>
     public PauseGameState PauseState { get; private set; }
 
     #endregion
+    
+    #region Event Subscription
+    private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
+    {
+        if (StateMachine.CurrentState == null) return;
+
+        if (scene.name.Contains(_gameSceneSuffix))
+            StateMachine.ChangeState(StartState);
+        else if (scene.name.Contains(_mainMenuSceneName)) StateMachine.ChangeState(MenuState);
+    }
+    #endregion
 
     #region Monobehavior Funtions
-
     protected override void Awake()
     {
         base.Awake();
@@ -89,6 +73,7 @@ public class GameManager : Singleton<GameManager>
 
     #endregion
     
+    #region Public Functions
     public void LoadMainMenu()
     {
         if (!Application.CanStreamedLevelBeLoaded(_mainMenuSceneName))
@@ -99,16 +84,15 @@ public class GameManager : Singleton<GameManager>
 
         EventManager.InvokeExitedGameplayScene();
         UIManager.Instance.UnloadAll();
-        _gridScoreMap.Clear();
+        GridScoreMap.Clear();
         PlayerGrid = Guid.NewGuid();
         SceneManager.LoadScene(_mainMenuSceneName);
+        Reset();
     }
-
-    #region Public Functions
-
+    
     public void ExitGame()
     {
-        var success = UIManager.Instance.ShowConfirmPanel(_exitGameConfirmMessage,
+        var success = UIManager.Instance.ShowConfirmPanel(GameSettings.ExitGameConfirmMessage,
             () => Instance.LoadMainMenu(),
             () => Instance.PauseGame(false));
         if (success) StateMachine.ChangeState(PauseState);
@@ -134,24 +118,45 @@ public class GameManager : Singleton<GameManager>
 
         UIManager.Instance.UnloadAll();
         NumberOfPlayers = numberOfPlayers;
+        InitializeGameMode();
         SceneManager.LoadScene(sceneName);
     }
 
-    public void SignUpGridToGame(Guid gridID, bool isAiControlled)
+    private void InitializeGameMode()
     {
-        if (!isAiControlled) PlayerGrid = gridID;
-        _gridScoreMap[gridID] = 0;
+        if (NumberOfPlayers == 1)
+        {
+            GameMode = new GameModes.SinglePlayerGameMode(this);
+        }
+        else
+        {
+            GameMode = new GameModes.MultiPlayerGameMode(this);
+        }
     }
 
-    public void UpdateGridScore(Guid gridId, int score)
+    public bool SignUpGridToGame(Guid gridID, bool isPlayer)
     {
-        _gridScoreMap[gridId] = score;
+        if (!PlayerGrid.HasValue && isPlayer)
+        {
+            PlayerGrid = gridID;
+            GridScoreMap[PlayerGrid.Value] = 0;
+            return true;
+        }
+        if(!isPlayer)
+        {
+            GridScoreMap[gridID] = 0;
+            return true;
+        } 
+        
+        GridScoreMap[gridID] = 0;
+        Debug.LogWarning("Grid is assigned as player but theres already a player grid");
+        return false;
     }
 
-    public void GameEnd()
+    public void Reset()
     {
-        StateMachine.ChangeState(EndState);
+        PlayerGrid = null;
+        GridScoreMap.Clear();
     }
-
     #endregion
 }

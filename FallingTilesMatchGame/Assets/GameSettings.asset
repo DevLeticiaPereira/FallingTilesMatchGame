@@ -13,6 +13,12 @@ MonoBehaviour:
   m_Name: GameSettings
   m_EditorClassIdentifier: 
   _endGameScreenTime: 3
+  _endGameWinMessage: Congratulation! You have won!
+  _endGameLostMessage: 'You Lost! '
+  _exitGameConfirmMessage: Do you really want to exit the game?
+  _singlePlayerHighScoreMessage: 'Congratulation! You have a new high score: '
+  _singlePlayerStandardMessage: Your score was {0} and the current highscore is {1}.
+    Better luck next time.
   _gridSetupData: {fileID: 11400000, guid: e5277c62718b2574a80dc8411098aeda, type: 2}
   _minNumberOfTilesToMatch: 4
   _tilesData:

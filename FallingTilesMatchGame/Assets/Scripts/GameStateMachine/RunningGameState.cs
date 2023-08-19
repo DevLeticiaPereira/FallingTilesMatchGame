@@ -4,7 +4,6 @@ using System.Collections.Generic;
 public class RunningGameState : GameState
 {
     private Dictionary<Guid, int> GridScoreMap = new();
-
     public RunningGameState(GameManager gameManager, StateMachine<GameState> gameStateMachine) : base(gameManager,
         gameStateMachine)
     {
@@ -23,12 +22,17 @@ public class RunningGameState : GameState
 
     private void OnScore(Guid gridID, int newScore)
     {
-        _gameManager.UpdateGridScore(gridID, newScore);
+        _gameManager.GridScoreMap[gridID] = newScore;
+        _gameManager.GameMode.HandleScore(newScore);
     }
 
     private void OnGridGameOver(Guid gridID)
     {
-        if (_gameManager.NumberOfPlayers == 1) _gameManager.StateMachine.ChangeState(_gameManager.EndState);
+        _gameManager.GameMode.HandleGridGameOver(gridID);
+        if (_gameManager.GameMode.IsGameOver) 
+        {
+            _gameManager.StateMachine.ChangeState(_gameManager.EndState);
+        }
     }
 
     public override void Exit()

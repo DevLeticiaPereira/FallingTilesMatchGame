@@ -237,7 +237,7 @@ namespace Grid
 
         private bool TryToFindMatches()
         {
-            var gridMatchedPositions = CheckForMatches(_gridPositionsToCheck);
+            var gridMatchedPositions = GridUtilities.CheckForMatches(Grid, _gridPositionsToCheck, _minNumberToMatch);
             if (gridMatchedPositions.Count > 0)
             {
                 foreach (var gridMatchedPosition in gridMatchedPositions) RemoveTileFromGrid(gridMatchedPosition);
@@ -248,20 +248,6 @@ namespace Grid
             _gridPositionsToCheck.Clear();
             _tileOnMatchingState = gridMatchedPositions.Count;
             return gridMatchedPositions.Count > 0;
-        }
-
-        //return all matched positions for matches that are made int the grid with the grid Positions To Check hashset
-        private HashSet<Vector2Int> CheckForMatches(HashSet<Vector2Int> gridPositionsToCheck)
-        {
-            var gridPositionsMatched = new HashSet<Vector2Int>();
-            foreach (var gridPositionToCheck in gridPositionsToCheck)
-            {
-                var connectedGridPosition = GridUtilities.GetChainConnectedTiles(Grid, gridPositionToCheck);
-                if (connectedGridPosition.Count >= _minNumberToMatch)
-                    gridPositionsMatched.UnionWith(connectedGridPosition);
-            }
-
-            return gridPositionsMatched;
         }
 
         private bool TryAddTileToGrid(Vector2Int gridPosition, Tile tile)

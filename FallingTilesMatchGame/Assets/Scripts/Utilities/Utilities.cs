@@ -15,7 +15,28 @@ namespace Utilities
 
     public static class TileUtilities
     {
-        
+        public static Vector2Int GetTileGridTarget(GridManager gridManager, Tile tileToCheck, Tile pairTile)
+        {
+            var firstAvailablePosition = new Vector2Int(-1,-1);
+            for (var i = 0; i <= gridManager.GridInfo.Rows; ++i)
+            {
+                var positionToCheck = new Vector2Int(tileToCheck.TemporaryGridPosition.Value.x, i);
+                if (GridUtilities.IsGridPositionAvailable(gridManager.Grid, positionToCheck))
+                {
+                    firstAvailablePosition = positionToCheck;
+                    break;
+                }
+            }
+
+            if (firstAvailablePosition != new Vector2Int(-1,-1))
+            {
+                var positionComparisonRange = 0.1f;
+                if (tileToCheck.transform.position.y > pairTile.transform.position.y &&
+                    Mathf.Abs(tileToCheck.transform.position.y - pairTile.transform.position.y) > positionComparisonRange)
+                    firstAvailablePosition += new Vector2Int(0, 1);
+            }
+            return firstAvailablePosition;
+        }
     }
 
     public static class GridUtilities
@@ -136,7 +157,7 @@ namespace Utilities
             return grid.ContainsKey(gridPosition);
         }
 
-        private static bool TryGetTileAtGridPosition(Dictionary<Vector2Int, CellInfo> grid, Vector2Int gridPosition,
+        public static bool TryGetTileAtGridPosition(Dictionary<Vector2Int, CellInfo> grid, Vector2Int gridPosition,
             out Tile tile)
         {
             tile = null;
@@ -145,6 +166,20 @@ namespace Utilities
             tile = cellInfo.Tile;
             return tile != null;
         }
+        
+        //return all matched positions for matches that are made int the grid with the grid Positions To Check hashset
+         public static HashSet<Vector2Int> CheckForMatches(Dictionary<Vector2Int, CellInfo> grid, HashSet<Vector2Int> gridPositionsToCheck, int minNumberToMatch)
+         {
+             var gridPositionsMatched = new HashSet<Vector2Int>();
+             foreach (var gridPositionToCheck in gridPositionsToCheck)
+             {
+                 var connectedGridPosition = GetChainConnectedTiles(grid, gridPositionToCheck);
+                 if (connectedGridPosition.Count >= minNumberToMatch)
+                     gridPositionsMatched.UnionWith(connectedGridPosition);
+             }
+        
+             return gridPositionsMatched;
+         }
 
         public class CellInfo
         {

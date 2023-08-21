@@ -34,7 +34,7 @@ public class AIController : MonoBehaviour
         _gridManager = gridManager;
         _gridRows = _gridManager.GridInfo.Rows;
         _gridColumns = _gridManager.GridInfo.Columns;
-        _timeBetweenInput = GameManager.Instance.GameSettings.MoveTimeBetweenColumns;
+        _timeBetweenInput = GameManager.Instance.GameSettings.MoveTimeBetweenColumns * 2;
     }
 
     private void TileReachedGrid(Guid gridID, Vector2Int gridPosition, Tile tile)

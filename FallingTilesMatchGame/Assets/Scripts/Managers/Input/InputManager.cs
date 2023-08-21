@@ -52,7 +52,7 @@ public class InputManager : Singleton<InputManager>
     private void Start()
     {
         PlayerInputEnabled = false;
-        _horizontalMovementCooldown = GameManager.Instance.GameSettings.MoveTimeBetweenColumns;
+        _horizontalMovementCooldown = GameManager.Instance.GameSettings.MoveTimeBetweenColumns * 2;
     }
 
     private void OnEnable()

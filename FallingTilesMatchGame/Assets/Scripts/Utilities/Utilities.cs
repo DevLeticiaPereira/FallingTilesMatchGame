@@ -131,7 +131,7 @@ namespace Utilities
             return cellInfo.WorldPosition;
         }
 
-        public static Dictionary<Vector2Int, CellInfo> GenerateGridCells(Vector2 initialPosition,
+        public static Dictionary<Vector2Int, CellInfo> GenerateGridCells(Vector2 initialPosition, Vector3 parentScale,
             GridSetupData gridSetupData)
         {
             var newGrid = new Dictionary<Vector2Int, CellInfo>();
@@ -140,9 +140,9 @@ namespace Utilities
             {
                 var gridPos = new Vector2Int(col, row);
                 // Calculate the position of the current block
-                var x = initialPosition.x + gridSetupData.BlockDimensions.x * col +
+                var x = initialPosition.x + gridSetupData.BlockDimensions.x * col * parentScale.x +
                         gridSetupData.BlockSpaceBetween.x * col;
-                var y = initialPosition.y + gridSetupData.BlockDimensions.y * row +
+                var y = initialPosition.y + gridSetupData.BlockDimensions.y * row * parentScale.y +
                         gridSetupData.BlockSpaceBetween.y * row;
                 Vector2 worldPosition = new Vector3(x, y);
                 var cell = new CellInfo(worldPosition);

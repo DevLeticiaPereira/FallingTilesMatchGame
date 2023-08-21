@@ -20,9 +20,9 @@ public class GridSetup : MonoBehaviour
         for (var col = 0; col < _gridSetupData.Columns; col++)
         {
             // Calculate the position of the current block
-            var x = initialPosition.x + _gridSetupData.BlockDimensions.x * col +
+            var x = initialPosition.x + _gridSetupData.BlockDimensions.x * col * transform.parent.localScale.x +
                     _gridSetupData.BlockSpaceBetween.x * col;
-            var y = initialPosition.y + _gridSetupData.BlockDimensions.y * row +
+            var y = initialPosition.y + _gridSetupData.BlockDimensions.y * row * transform.parent.localScale.y +
                     _gridSetupData.BlockSpaceBetween.y * row;
             var position = new Vector3(x, y, 0);
 

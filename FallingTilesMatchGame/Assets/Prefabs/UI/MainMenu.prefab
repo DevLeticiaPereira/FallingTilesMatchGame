@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Settings
+  m_text: About
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ce33712a498415b44bf0cc6a91df3dc3, type: 2}
   m_sharedMaterial: {fileID: -3210180708601483875, guid: ce33712a498415b44bf0cc6a91df3dc3, type: 2}
@@ -280,7 +280,7 @@ GameObject:
   - component: {fileID: 8694376445593365172}
   - component: {fileID: 3100383346918931021}
   m_Layer: 5
-  m_Name: Settings
+  m_Name: about
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

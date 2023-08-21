@@ -85,7 +85,7 @@ namespace Grid
             }
             SetupGridOwnerName();
             LoadTilesSpawnProbability();
-            Grid = GridUtilities.GenerateGridCells(transform.position, GridInfo);
+            Grid = GridUtilities.GenerateGridCells(transform.position, transform.parent.localScale, GridInfo);
             SetupStartPosition();
             UpdateGridWaitingPairs();
         }

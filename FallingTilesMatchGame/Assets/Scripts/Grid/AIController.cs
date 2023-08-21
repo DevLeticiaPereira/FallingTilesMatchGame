@@ -13,7 +13,7 @@ public class AIController : MonoBehaviour
     private int _gridColumns;
     private Tile _rootTile;
     private Tile _childTile;
-    private float _moveHorizontalMinTime;
+    private float _timeBetweenInput;
 
     private Dictionary<Vector2Int, GridUtilities.CellInfo> GridCopy = new Dictionary<Vector2Int, GridUtilities.CellInfo>();
 
@@ -34,7 +34,7 @@ public class AIController : MonoBehaviour
         _gridManager = gridManager;
         _gridRows = _gridManager.GridInfo.Rows;
         _gridColumns = _gridManager.GridInfo.Columns;
-        _moveHorizontalMinTime = GameManager.Instance.GameSettings.MoveTimeBetweenColumns + 0.5f;
+        _timeBetweenInput = GameManager.Instance.GameSettings.MoveTimeBetweenColumns;
     }
 
     private void TileReachedGrid(Guid gridID, Vector2Int gridPosition, Tile tile)
@@ -44,7 +44,7 @@ public class AIController : MonoBehaviour
             return;
         }
         
-        StopCoroutine("MoveTileHorizontal");
+        StopCoroutine("ControlTile");
         _rootTile = null;
         _childTile = null;
         GridCopy.Clear();
@@ -70,6 +70,7 @@ public class AIController : MonoBehaviour
         var tileToPlacePosition = ChoseTileToPlaceAndPosition();
         var positionToPlace = tileToPlacePosition.Item1;
         var tileToPlace = tileToPlacePosition.Item2;
+
         if (tileToPlace == null)
         {
             List<Vector2Int> tilesPossiblePositions = GetFirstEmptySpaceForEachColumn();
@@ -80,44 +81,66 @@ public class AIController : MonoBehaviour
             }
             int randomTileHelper = UnityEngine.Random.Range(0, 2);
             tileToPlace = randomTileHelper == 0 ? _rootTile : _childTile;
-            Debug.Log("Random tile and place");
         }
-        Debug.Log($"Maching Tile {(tileToPlace.IsRoot ? "root" : "child")} to grid position {positionToPlace}");
         StartCoroutine(ControlTile(tileToPlace, positionToPlace));
     }
 
     private IEnumerator ControlTile(Tile tile, Vector2Int targetPosition)
     {
-        Tile pair = tile == _rootTile ? _childTile : _rootTile;
-      
-        while (TileUtilities.GetTileGridTarget(_gridManager, tile, pair) != targetPosition)
-        {
-            if (_rootTile == null || _childTile == null)
-            {
-             break;   
-            }
-            
-            if (!_rootTile.TemporaryGridPosition.HasValue || !_childTile.TemporaryGridPosition.HasValue)
-            {
-                break;
-            }
+        TileData.TileConnections targetPositionRelatedToTileRoot = GetTargetDirection(tile, targetPosition);
 
-            if (tile.TemporaryGridPosition.Value.x != targetPosition.x)
-            {
-                var dragDirection = tile.TemporaryGridPosition.Value.x > targetPosition.x
-                    ? InputManager.DragDirection.Left
-                    : InputManager.DragDirection.Right;
-                EventManager.InvokeMoveHorizontal(_gridManager.GridID, dragDirection);
-            }
-            else
-            {
-                EventManager.InvokeRotate(_gridManager.GridID);
-               
-            }
-            yield return new WaitForSeconds(_moveHorizontalMinTime + 0.1f);
+        while (_childTile != null && _childTile.FallingTileChildState.CurrentPositionRelatedToTileRoot != targetPositionRelatedToTileRoot 
+               && targetPosition.y < tile.TemporaryGridPosition.Value.y)
+        {
+            EventManager.InvokeRotate(_gridManager.GridID);
+            yield return new WaitForSeconds(_timeBetweenInput);
+        }
+       
+        var dragDirection = tile.TemporaryGridPosition.Value.x > targetPosition.x
+            ? InputManager.DragDirection.Left
+            : InputManager.DragDirection.Right;
+        int numberOfInteractions = Mathf.Abs(tile.TemporaryGridPosition.Value.x - targetPosition.x);
+        
+        while (numberOfInteractions > 0 && targetPosition.y < tile.TemporaryGridPosition.Value.y)
+        {
+            EventManager.InvokeMoveHorizontal(_gridManager.GridID, dragDirection);
+            --numberOfInteractions;
+            yield return new WaitForSeconds(_timeBetweenInput);
         }
     }
-    
+
+    private TileData.TileConnections GetTargetDirection(Tile tile, Vector2Int targetPosition)
+    {
+        List<TileData.TileConnections> possiblePosition = new List<TileData.TileConnections>()
+        {
+            TileData.TileConnections.Left,
+            TileData.TileConnections.Down,
+            TileData.TileConnections.Right,
+            TileData.TileConnections.Up
+        };
+
+        if (tile == _childTile)
+        {
+            possiblePosition.Remove(TileData.TileConnections.Down);
+            if (targetPosition.x == _gridColumns - 1)
+            {
+                possiblePosition.Remove(TileData.TileConnections.Left);
+            }
+        }
+
+        if (tile == _rootTile)
+        {
+            possiblePosition.Remove(TileData.TileConnections.Up);
+            if (targetPosition.x == 0)
+            {
+                possiblePosition.Remove(TileData.TileConnections.Right);
+            }
+        }
+
+        int indexToGet = UnityEngine.Random.Range(0, possiblePosition.Count);
+        return possiblePosition[indexToGet];
+    }
+
     private List<Vector2Int> GetFirstEmptySpaceForEachColumn()
     {
         List<Vector2Int> FirstEmptySpaceColumns = new List<Vector2Int>();
@@ -136,86 +159,63 @@ public class AIController : MonoBehaviour
 
         return FirstEmptySpaceColumns;
     }
-    
-    private List<Vector2Int> GetTopTilesPositionsInColumns()
-    {
-        List<Vector2Int> TopTilesInColumns = new List<Vector2Int>();
-        for (int i = 0; i < _gridColumns; i++)
-        {
-            for (int j = 0; j < _gridRows + 1; j++)
-            {
-                var positionToCheck = new Vector2Int(i, j);
-                var tileAbove = new Vector2Int(i, j + 1);
-                
-                if (GridUtilities.IsGridPositionAvailable(GridCopy, tileAbove))
-                {
-                    TopTilesInColumns.Add(positionToCheck);
-                    break;
-                }
-            }
-        }
 
-        return TopTilesInColumns;
-    }
-    
     private Tuple<Vector2Int, Tile> ChoseTileToPlaceAndPosition()
     {
-        List<Vector2Int> topTilesPositionsInColumns = GetTopTilesPositionsInColumns();
+        List<Vector2Int> firstEmptyPositionForEachColumn = GetFirstEmptySpaceForEachColumn();
         int numberOfMatches = 0;
         Vector2Int positionToPlace = new Vector2Int(-1,-1);
         Tile tileMatching = null;
 
-        foreach (var tilePosition in topTilesPositionsInColumns)
+        foreach (var position in firstEmptyPositionForEachColumn)
         {
-            Dictionary<Vector2Int, GridUtilities.CellInfo> simulatedGrid = new Dictionary<Vector2Int, GridUtilities.CellInfo>(GridCopy);
-            if (!GridUtilities.TryGetTileAtGridPosition(simulatedGrid, tilePosition, out Tile tile))
+            var neighborsTiles = GetNeighborsTiles(position, GridCopy);
+            foreach (var neighborsTile in neighborsTiles)
+            {
+                HandleNeighboursMatches(neighborsTile, position, _rootTile);
+                HandleNeighboursMatches(neighborsTile, position, _childTile);
+            }
+        }
+
+        void HandleNeighboursMatches(Tuple<Vector2Int, Tile> tuple, Vector2Int targetPosition, Tile tilePairToPlace)
+        {
+            if (tuple.Item2.Data.ColorTile == tilePairToPlace.Data.ColorTile)
+            {
+                var matches = GridUtilities.CheckForMatches(GridCopy, new HashSet<Vector2Int>() { tuple.Item1 }, 1);
+                if (matches.Count > numberOfMatches)
+                {
+                    numberOfMatches = matches.Count;
+                    positionToPlace = targetPosition;
+                    tileMatching = tilePairToPlace;
+                }
+            }
+        }
+        
+        return new Tuple<Vector2Int, Tile>(positionToPlace, tileMatching);
+    }
+
+    private static HashSet<Tuple<Vector2Int,Tile>> GetNeighborsTiles(Vector2Int tilePosition, Dictionary<Vector2Int, GridUtilities.CellInfo> simulatedGrid)
+    {
+        var neighborsTiles = new HashSet<Tuple<Vector2Int,Tile>>();
+        foreach (TileData.TileConnections direction in Enum.GetValues(typeof(TileData.TileConnections)))
+        {
+            if (direction == TileData.TileConnections.Up || direction == TileData.TileConnections.None)
             {
                 continue;
             }
 
-            if (tile.Data.ColorTile == _rootTile.Data.ColorTile)
+            var adjacentTilePosition = GridUtilities.GetAdjacentGridPosition(tilePosition, direction);
+            if (!GridUtilities.TryGetTileAtGridPosition(simulatedGrid, adjacentTilePosition, out Tile adjacentTile))
             {
-                var matches = GridUtilities.CheckForMatches(simulatedGrid, new HashSet<Vector2Int>(){tilePosition}, 1);
-                if (matches.Count > numberOfMatches)
-                {
-                    numberOfMatches = matches.Count;
-                    positionToPlace = tilePosition + new Vector2Int(0,1);
-                    tileMatching = _rootTile;
-                }
+                continue;
+            }
 
-                int shouldReplace = UnityEngine.Random.Range(0, 2);
-                if (matches.Count == numberOfMatches && shouldReplace == 1)
-                {
-                    numberOfMatches = matches.Count;
-                    positionToPlace = tilePosition + new Vector2Int(0,1);
-                    tileMatching = _rootTile;
-                }
-            }
-            
-            if (tile.Data.ColorTile == _childTile.Data.ColorTile)
-            {
-                var matches = GridUtilities.CheckForMatches(simulatedGrid, new HashSet<Vector2Int>(){tilePosition}, 1);
-                if (matches.Count > numberOfMatches)
-                {
-                    numberOfMatches = matches.Count;
-                    positionToPlace = tilePosition + new Vector2Int(0,1);
-                    tileMatching = _childTile;
-                }
-                
-                int shouldReplace = UnityEngine.Random.Range(0, 2);
-                if (matches.Count == numberOfMatches && shouldReplace == 1)
-                {
-                    numberOfMatches = matches.Count;
-                    positionToPlace = tilePosition + new Vector2Int(0,1);
-                    tileMatching = _childTile;
-                }
-            }
+            neighborsTiles.Add(new Tuple<Vector2Int, Tile>(adjacentTilePosition, adjacentTile));
         }
-       
-        return new Tuple<Vector2Int, Tile>(positionToPlace, tileMatching);
+
+        return neighborsTiles;
     }
-
-
+    
     private void SetupRootAndChildTiles(HashSet<Tile> tilePair)
     {
         foreach (var tile in tilePair)

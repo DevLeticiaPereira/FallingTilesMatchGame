@@ -23,9 +23,6 @@ public class InputManager : Singleton<InputManager>
     private InputAction _moveInputAction;
     private bool _movingHorizontal;
 
-    [SerializeField]
-    private float _moveDistanceThreshold  = 150.0f;
-
     private PlayerInput _playerInput;
     private InputAction _singleTouchInputAction;
     private Vector2 _touchLastPosition;
@@ -116,14 +113,6 @@ public class InputManager : Singleton<InputManager>
             return;
         }
 
-        // Calculate the distance moved since the last frame
-        var distanceMoved = Vector2.Distance(currentTouchPos, _touchLastPosition);
-        // Check if the distance moved is greater than the threshold to send move action
-        if (distanceMoved < _moveDistanceThreshold)
-        {
-        	return;
-        }
-        
         if (_movingHorizontal)
         {
             return;
@@ -144,16 +133,6 @@ public class InputManager : Singleton<InputManager>
             EventManager.InvokeAccelerate(_playerGridID,true);
             _draggingDown = true;
         }
-        else
-        {
-            if (_draggingDown)
-            {
-                EventManager.InvokeAccelerate(_playerGridID, false);
-                _draggingDown = false;
-            }
-        }
-
-        // Update the last touch position for the next frame
         _touchLastPosition = currentTouchPos;
     }
 

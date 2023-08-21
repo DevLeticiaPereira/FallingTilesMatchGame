@@ -37,6 +37,7 @@ namespace Grid.TileStates
             EventManager.EventTilesMatched += OnTilesMatched;
             EventManager.EventTilesAddedToGrid += OnTilesAddedToGrid;
             if (!TileOwner.GridPosition.HasValue) return;
+            TileOwner.transform.position = GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, TileOwner.GridPosition.Value);
             _neighborConnectionMap = GetNeighborGridPositions(TileOwner.GridPosition.Value);
         }
 

@@ -119,8 +119,6 @@ namespace Grid
         public void SetGridPosition(Vector2Int gridPosition)
         {
             GridPosition = gridPosition;
-            // if(GridPosition.HasValue)
-            //     transform.position = Utilities.GridUtilities.GetGridCellWorldPosition(_gridManager.Grid, GridPosition.Value);
             TileStateMachine.ChangeState(PlacedOnGridTileState);
         }
 
